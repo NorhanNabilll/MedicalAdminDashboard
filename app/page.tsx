@@ -8,11 +8,19 @@ import DashboardLayout from "@/components/dashboard-layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import useSWR from "swr"
 import { getStatistics } from "@/lib/api/statistics"
-import type { StatisticsData } from "@/lib/api/types"
-import OrdersTable from "@/components/orders-table"
 import { OrderStatusEnum } from "@/lib/api/orders"
 import { useSignalR } from '@/context/SignalRContext' // استيراد SignalR
-
+import dynamic from 'next/dynamic'
+import { Skeleton } from "@/components/ui/skeleton"
+const OrdersTable = dynamic(() => import('@/components/orders-table'), {
+  loading: () => ( 
+    <Card>
+      <CardHeader><Skeleton className="h-6 w-32" /></CardHeader>
+      <CardContent><Skeleton className="h-48 w-full" /></CardContent>
+    </Card>
+  ),
+  ssr: false // <-- مهم لو الجدول يستخدم window أو localStorage بكثرة
+});
 export default function HomePage() {
   const router = useRouter()
   const { admin, isLoading, getDefaultRoute } = useAuth()

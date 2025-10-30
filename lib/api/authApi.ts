@@ -19,11 +19,11 @@ export interface LoginResponseData {
 /**
  * دالة تسجيل الدخول.
  */
-export async function login(email, password) {
+export async function login(email: string, password: string ,recaptchaToken: string)  {
   try {
     const response = await apiClient.post<{ success: boolean; message: string; data: LoginResponseData }>(
         "/v1/AdminAuth/login", 
-        { email, password }
+        { email, password, recaptchaToken }
     );
     
     if (response.data.success) {
