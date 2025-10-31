@@ -258,8 +258,8 @@ function UsersPage() {
     {/* This is the corrected part */}
     <div className="flex flex-col sm:flex-row gap-4 items-end mt-4">
       {/* Search Input */}
-      <div className="w-full sm:flex-1">
-        <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className="w-full sm:flex-1 relative">
+        <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
         <Input
           ref={searchInputRef}
           id="search"

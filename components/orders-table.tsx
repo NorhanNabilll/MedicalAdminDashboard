@@ -1,20 +1,38 @@
 "use client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useEffect, useRef } from "react"
-import { useSignalR } from '@/context/SignalRContext';
+import { useEffect, useRef, useState, useMemo } from "react"
+import { useSignalR } from '@/context/SignalRContext'
 import { Button } from "@/components/ui/button"
-import { Search, Download, ChevronLeft, ChevronRight, FileText, Loader2 } from "lucide-react"
-import { useState } from "react"
+import { Search, Download, ChevronLeft, ChevronRight, FileText, Loader2, X, CalendarIcon } from "lucide-react" 
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { getAllOrders, OrderStatusEnum, getStatusDisplay, type Order } from "@/lib/api/orders"
+import { getAllOrders, OrderStatusEnum, getStatusDisplay, type Order, exportOrders, type ExportOrdersBody } from "@/lib/api/orders"
 import { useToast } from "@/hooks/use-toast"
-import { formatDateArabic, formatCurrencyEnglish } from "@/lib/utils"
+import { formatDateArabic, formatCurrencyEnglish, cn } from "@/lib/utils"
 import useSWR from "swr"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { OrderDetailsModal } from "@/components/order-details-modal"
 
+import { Checkbox } from "@/components/ui/checkbox"
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogClose 
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { format } from "date-fns"
+import { arEG } from "date-fns/locale"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
+
+// (دالة getStatusBadgeClassName زي ما هي)
 const getStatusBadgeClassName = (status: OrderStatusEnum) => {
   switch (status) {
     case OrderStatusEnum.Pending:
@@ -28,11 +46,11 @@ const getStatusBadgeClassName = (status: OrderStatusEnum) => {
     default:
       return ""
   }
-}
+};
 
 export default function OrdersTable({ defaultStatus = "all" }: { defaultStatus?: OrderStatusEnum | "all" }) {
   const { toast } = useToast()
-  const { registerOrderCallback, isConnected } = useSignalR();
+  const { registerOrderCallback } = useSignalR();
   const [searchQuery, setSearchQuery] = useState("")
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<OrderStatusEnum | "all">(defaultStatus)
@@ -43,7 +61,54 @@ export default function OrdersTable({ defaultStatus = "all" }: { defaultStatus?:
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [pageSize, setPageSize] = useState(10)
 
-  // Debounce logic
+  const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([])
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false)
+  const [exportFormat, setExportFormat] = useState<"1" | "2">("1") // 1 = Excel, 2 = PDF
+  const [exportTab, setExportTab] = useState<"filtered" | "selected">("filtered")
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined)
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined)
+
+  const { data, error, isLoading, mutate } = useSWR(
+    ["orders", currentPage, pageSize, statusFilter, debouncedSearchTerm, startDate, endDate],
+    () =>
+      getAllOrders({
+        page: currentPage,
+        pageSize: pageSize,
+        status: statusFilter === "all" ? "all" : statusFilter,
+        searchTerm: debouncedSearchTerm || undefined,
+        startDate: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
+        endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
+      }),
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 5000,
+    },
+  )
+  
+  const orders = data?.data.items || []
+  const pagination = data?.data.pagination
+  
+  const currentOrderIdsOnPage = useMemo(() => orders.map((order) => order.id), [orders]);
+  
+  const isAllOnPageSelected = useMemo(() => 
+      orders.length > 0 && currentOrderIdsOnPage.every(id => selectedOrderIds.includes(id)),
+      [currentOrderIdsOnPage, selectedOrderIds, orders.length]
+  );
+  
+  const handleSelectAllOnPage = (checked: boolean) => {
+    if (checked) {
+      setSelectedOrderIds((prev) => [...new Set([...prev, ...currentOrderIdsOnPage])]);
+    } else {
+      setSelectedOrderIds((prev) => prev.filter(id => !currentOrderIdsOnPage.includes(id)));
+    }
+  };
+  
+  const handleSelectRow = (orderId: number, checked: boolean) => {
+    setSelectedOrderIds((prev) =>
+      checked ? [...prev, orderId] : prev.filter((id) => id !== orderId)
+    )
+  }
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchQuery)
@@ -51,52 +116,76 @@ export default function OrdersTable({ defaultStatus = "all" }: { defaultStatus?:
     return () => clearTimeout(timer)
   }, [searchQuery])
 
-  const { data, error, isLoading, mutate } = useSWR(
-    ["orders", currentPage, pageSize, statusFilter, debouncedSearchTerm],
-    () =>
-      getAllOrders({
-        page: currentPage,
-        pageSize: pageSize,
-        status: statusFilter === "all" ? "all" : statusFilter,
-        searchTerm: debouncedSearchTerm || undefined,
-      }),
-    {
-      revalidateOnFocus: false,
-      dedupingInterval: 5000,
-    },
-  )
-
   useEffect(() => {
     registerOrderCallback(() => {
       console.log('Order created - refreshing table...');
       mutate();
     });
   }, [mutate, registerOrderCallback]);
+  
+  useEffect(() => {
+    setSelectedOrderIds([])
+    setExportTab("filtered")
+  }, [statusFilter, debouncedSearchTerm, pageSize, startDate, endDate])
 
   const handleSearch = (value: string) => {
     setSearchQuery(value)
-    setCurrentPage(1) // Reset to first page on search
+    setCurrentPage(1) 
   }
 
   const handleStatusChange = (value: string) => {
     setStatusFilter(value === "all" ? "all" : (Number.parseInt(value) as OrderStatusEnum))
-    setCurrentPage(1) // Reset to first page on filter change
+    setCurrentPage(1) 
+  }
+  
+  const handleStartDateChange = (date: Date | undefined) => {
+    setStartDate(date)
+    setCurrentPage(1)
+  }
+  const handleEndDateChange = (date: Date | undefined) => {
+    setEndDate(date)
+    setCurrentPage(1)
   }
 
-  const handleExport = async () => {
+  const handleConfirmExport = async () => {
     setIsExporting(true)
-    try {
-      // Simulate export delay
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+    
+    let currentExportTab = exportTab
+    if (selectedOrderIds.length === 0) {
+      currentExportTab = "filtered"
+      setExportTab("filtered")
+    }
+    
+    let body: ExportOrdersBody = {
+      format: Number(exportFormat) as 2 | 1,
+    }
 
+    if (currentExportTab === "selected") {
+      if (selectedOrderIds.length === 0) {
+        toast({ title: "خطأ", description: "الرجاء اختيار طلب واحد على الأقل", variant: "destructive" })
+        setIsExporting(false)
+        return
+      }
+      body.orderIds = selectedOrderIds
+    } else {
+      if (debouncedSearchTerm) body.searchTerm = debouncedSearchTerm
+      if (statusFilter !== "all") body.status = statusFilter
+      if (startDate) body.startDate = format(startDate, "yyyy-MM-dd")
+      if (endDate) body.endDate = format(endDate, "yyyy-MM-dd")
+    }
+
+    try {
+      await exportOrders(body)
       toast({
         title: "تم التصدير بنجاح",
-        description: "تم تصدير الطلبات إلى ملف Excel",
+        description: `جاري تحميل ملف ${exportFormat === "1" ? "Excel" : "PDF"}...`,
       })
+      setIsExportDialogOpen(false)
+      setSelectedOrderIds([])
     } catch (error: any) {
       toast({
         title: "فشل التصدير",
-        description: error.message || "حدث خطأ أثناء تصدير الطلبات",
+        description: error.message || "حدث خطأ أثناء إنشاء الملف",
         variant: "destructive",
       })
     } finally {
@@ -110,52 +199,38 @@ export default function OrdersTable({ defaultStatus = "all" }: { defaultStatus?:
   }
 
   const handleOrderUpdate = () => {
-    mutate() // Refresh the orders list
+    mutate()
   }
 
   const goToPage = (page: number) => {
-    if (data?.data.pagination) {
-      setCurrentPage(Math.max(1, Math.min(page, data.data.pagination.totalPages)))
+    if (pagination) {
+      setCurrentPage(Math.max(1, Math.min(page, pagination.totalPages)))
     }
   }
 
   const getPageNumbers = () => {
-    if (!data?.data.pagination) return []
-
-    const totalPages = data.data.pagination.totalPages
+    if (!pagination) return []
+    const totalPages = pagination.totalPages
     const pages: (number | string)[] = []
-
     if (totalPages <= 4) {
-      // Show all pages if 4 or fewer
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i)
-      }
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
     } else {
-      // Show first 3 pages + ellipsis + last page
-      pages.push(1)
-      pages.push(2)
-      pages.push(3)
-      pages.push("...")
-      pages.push(totalPages)
+      pages.push(1); pages.push(2); pages.push(3); pages.push("..."); pages.push(totalPages);
     }
-
     return pages
   }
 
   const goToPreviousPage = () => {
-    if (data?.data.pagination.hasPrevious) {
+    if (pagination?.hasPrevious) {
       setCurrentPage(currentPage - 1)
     }
   }
 
   const goToNextPage = () => {
-    if (data?.data.pagination.hasNext) {
+    if (pagination?.hasNext) {
       setCurrentPage(currentPage + 1)
     }
   }
-
-  const orders = data?.data.items || []
-  const pagination = data?.data.pagination
 
   return (
     <>
@@ -168,56 +243,148 @@ export default function OrdersTable({ defaultStatus = "all" }: { defaultStatus?:
             </div>
           </div>
 
-          {/* Toolbar */}
-          <div className="flex flex-col sm:flex-row gap-3 mt-4">
-            <div className="relative flex-1 w-full">
-              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                ref={searchInputRef}
-                placeholder="ابحث برقم الطلب أو اسم المريض..."
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="pr-10 text-right"
-              />
+          {/* --- ✅ تعديل: Toolbar محسن للـ Responsive --- */}
+          <div className="flex flex-col gap-3 mt-4">
+            
+            {/* الصف الأول: البحث والتصدير */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1 w-full">
+                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  ref={searchInputRef}
+                  placeholder="ابحث برقم الطلب أو اسم المريض..."
+                  value={searchQuery}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="pr-10 text-right"
+                />
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => setIsExportDialogOpen(true)}
+                disabled={isExporting}
+                className="w-full sm:w-auto bg-transparent flex-shrink-0"
+              >
+                <Download className="ml-2 h-4 w-4" />
+                تصدير
+              </Button>
             </div>
-            <Select value={statusFilter.toString()} onValueChange={handleStatusChange}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="حالة الطلب" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">جميع الحالات</SelectItem>
-                <SelectItem value={OrderStatusEnum.Pending.toString()}>تم الطلب</SelectItem>
-                <SelectItem value={OrderStatusEnum.Shipped.toString()}>تم الشحن</SelectItem>
-                <SelectItem value={OrderStatusEnum.Delivered.toString()}>تم الاستلام</SelectItem>
-                <SelectItem value={OrderStatusEnum.Cancelled.toString()}>تم الإلغاء</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select
-              value={pageSize.toString()}
-              onValueChange={(value) => {
-                setPageSize(Number(value))
-                setCurrentPage(1)
-              }}
-            >
-              <SelectTrigger className="w-full sm:w-[120px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10 صفوف</SelectItem>
-                <SelectItem value="50">50 صف</SelectItem>
-                <SelectItem value="100">100 صف</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button
-              variant="outline"
-              onClick={handleExport}
-              disabled={isExporting}
-              className="w-full sm:w-auto bg-transparent"
-            >
-              <Download className="ml-2 h-4 w-4" />
-              {isExporting ? "جاري التصدير..." : "تصدير"}
-            </Button>
+            
+            {/* الصف الثاني: فلاتر التاريخ والحالة وعدد الصفوف */}
+            {/* استخدمنا "flex-wrap" للسماح للعناصر بالنزول لسطر جديد في الشاشات المتوسطة
+              و "min-w-[200px]" لحقول التاريخ لضمان عدم انضغاطها بشكل سيء
+            */}
+            <div className="flex flex-col sm:flex-row gap-3 sm:flex-wrap">
+              
+              {/* Start Date Picker - تعديل: الزر والـ Popover أصبحوا داخل div واحد */}
+              <div className="flex-1 w-full sm:min-w-[200px] flex items-center gap-1">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "flex-1 justify-start text-right font-normal bg-transparent", // <-- تعديل: "flex-1" بدل "w-full"
+                        !startDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="ml-2 h-4 w-4" />
+                      {startDate ? format(startDate, "dd/MM/yyyy") : <span>تاريخ البدء</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={startDate}
+                      onSelect={handleStartDateChange}
+                      initialFocus
+                      locale={arEG}
+                    />
+                  </PopoverContent>
+                </Popover>
+                {/* زر المسح (X) - أصبح flex-shrink-0 ليحافظ على حجمه */}
+                {startDate && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-9 w-9 flex-shrink-0" // <-- تعديل: حجم موحد
+                    onClick={() => handleStartDateChange(undefined)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              
+              {/* End Date Picker - نفس تعديل زر البدء */}
+              <div className="flex-1 w-full sm:min-w-[200px] flex items-center gap-1">
+                 <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "flex-1 justify-start text-right font-normal bg-transparent", // <-- تعديل: "flex-1" بدل "w-full"
+                        !endDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="ml-2 h-4 w-4" />
+                      {endDate ? format(endDate, "dd/MM/yyyy") : <span>تاريخ الانتهاء</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={endDate}
+                      onSelect={handleEndDateChange}
+                      initialFocus
+                      locale={arEG}
+                    />
+                  </PopoverContent>
+                </Popover>
+                {/* زر المسح */}
+                {endDate && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-9 w-9 flex-shrink-0" // <-- تعديل: حجم موحد
+                    onClick={() => handleEndDateChange(undefined)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              
+              {/* Status Filter */}
+              <Select value={statusFilter.toString()} onValueChange={handleStatusChange}>
+                <SelectTrigger className="w-full sm:w-[180px] flex-shrink-0">
+                  <SelectValue placeholder="حالة الطلب" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع الحالات</SelectItem>
+                  <SelectItem value={OrderStatusEnum.Pending.toString()}>تم الطلب</SelectItem>
+                  <SelectItem value={OrderStatusEnum.Shipped.toString()}>تم الشحن</SelectItem>
+                  <SelectItem value={OrderStatusEnum.Delivered.toString()}>تم الاستلام</SelectItem>
+                  <SelectItem value={OrderStatusEnum.Cancelled.toString()}>تم الإلغاء</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              {/* Page Size Selector */}
+              <Select
+                value={pageSize.toString()}
+                onValueChange={(value) => {
+                  setPageSize(Number(value))
+                  setCurrentPage(1)
+                }}
+              >
+                <SelectTrigger className="w-full sm:w-[120px] flex-shrink-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10 صفوف</SelectItem>
+                  <SelectItem value="50">50 صف</SelectItem>
+                  <SelectItem value="100">100 صف</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+          {/* ------------------------------------------- */}
         </CardHeader>
 
         <CardContent>
@@ -242,14 +409,24 @@ export default function OrdersTable({ defaultStatus = "all" }: { defaultStatus?:
                   const displayIndex = (currentPage - 1) * pageSize + index + 1
                   return (
                     <Card key={order.id} className="overflow-hidden">
-                      <CardContent className="p-4">
+                      <CardContent className="p-4 relative">
+                        {/* Checkbox للموبايل */}
+                        <div className="absolute top-3 left-3 z-10">
+                          <Checkbox
+                            checked={selectedOrderIds.includes(order.id)}
+                            onCheckedChange={(checked) => handleSelectRow(order.id, checked as boolean)}
+                            className="h-5 w-5"
+                            aria-labelledby={`order-mobile-${order.id}`}
+                          />
+                        </div>
+                        
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
                               <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/10 text-primary text-xs font-semibold">
                                 {displayIndex}
                               </span>
-                              <h3 className="font-semibold text-base">{order.orderNumber}</h3>
+                              <h3 id={`order-mobile-${order.id}`} className="font-semibold text-base">{order.orderNumber}</h3>
                             </div>
                             <p className="text-sm text-muted-foreground mb-2">{order.customerName}</p>
                             <Badge className={getStatusBadgeClassName(order.status)}>
@@ -292,6 +469,14 @@ export default function OrdersTable({ defaultStatus = "all" }: { defaultStatus?:
                 <table className="min-w-full divide-y divide-border">
                   <thead className="bg-muted/50">
                     <tr>
+                      {/* Checkbox للـ Header */}
+                      <th scope="col" className="px-4 py-3">
+                        <Checkbox
+                          checked={isAllOnPageSelected}
+                          onCheckedChange={(checked) => handleSelectAllOnPage(checked as boolean)}
+                          aria-label="Select all rows on this page"
+                        />
+                      </th>
                       <th scope="col" className="px-4 py-3 text-right text-sm font-semibold w-[60px]">
                         #
                       </th>
@@ -324,8 +509,16 @@ export default function OrdersTable({ defaultStatus = "all" }: { defaultStatus?:
                       const displayIndex = (currentPage - 1) * pageSize + index + 1
                       return (
                         <tr key={order.id} className="hover:bg-muted/50 transition-colors">
+                          {/* Checkbox للـ Row */}
+                          <td className="px-4 py-4">
+                            <Checkbox
+                              checked={selectedOrderIds.includes(order.id)}
+                              onCheckedChange={(checked) => handleSelectRow(order.id, checked as boolean)}
+                              aria-labelledby={`order-${order.id}`}
+                            />
+                          </td>
                           <td className="px-4 py-4 text-sm font-medium">{displayIndex}</td>
-                          <td className="px-4 py-4 text-sm font-medium">{order.orderNumber}</td>
+                          <td id={`order-${order.id}`} className="px-4 py-4 text-sm font-medium">{order.orderNumber}</td>
                           <td className="px-4 py-4 text-sm">{order.customerName}</td>
                           <td className="px-4 py-4 text-sm text-muted-foreground">
                             {formatDateArabic(order.orderDate)}
@@ -418,7 +611,65 @@ export default function OrdersTable({ defaultStatus = "all" }: { defaultStatus?:
         </CardContent>
       </Card>
 
-      {/* OrderDetailsModal */}
+      {/* --- Dialog التصدير الجديد (معدل) --- */}
+      <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>تصدير الطلبات</DialogTitle>
+            <DialogDescription>
+              اختر نوع وطريقة التصدير التي تفضلها.
+            </DialogDescription>
+            <DialogClose className="absolute left-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+              <X className="h-4 w-4" />
+            </DialogClose>
+          </DialogHeader>
+          <div className="py-4 space-y-6">
+            <Tabs 
+              value={(selectedOrderIds.length > 0) ? exportTab : "filtered"} // <-- يجبره على "filtered" لو مفيش تحديد
+              onValueChange={(v) => setExportTab(v as any)} 
+              className="w-full"
+            >
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="filtered">تصدير الفلترة الحالية</TabsTrigger>
+                <TabsTrigger value="selected" disabled={selectedOrderIds.length === 0}>
+                  تصدير المحدد ({formatCurrencyEnglish(selectedOrderIds.length)})
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+
+            <div className="space-y-3">
+              <Label>نوع الملف</Label>
+              <RadioGroup
+                defaultValue="1"
+                value={exportFormat}
+                onValueChange={(v) => setExportFormat(v as "1" | "2")}
+                className="flex gap-4"
+              >
+                <div className="flex items-center space-x-2 space-x-reverse">
+                  <RadioGroupItem value="1" id="excel" />
+                  <Label htmlFor="excel" className="font-normal">Excel (xlsx)</Label>
+                </div>
+                <div className="flex items-center space-x-2 space-x-reverse">
+                  <RadioGroupItem value="2" id="pdf" />
+                  <Label htmlFor="pdf" className="font-normal">PDF</Label>
+                </div>
+              </RadioGroup>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsExportDialogOpen(false)} disabled={isExporting}>إلغاء</Button>
+            <Button onClick={handleConfirmExport} disabled={isExporting}>
+              {isExporting ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Download className="ml-2 h-4 w-4" />}
+              {isExporting ? "جاري التصدير..." : "تأكيد التصدير"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* ------------------------------------------- */}
+
+
+      {/* OrderDetailsModal (زي ما هي) */}
       <OrderDetailsModal
         order={selectedOrder}
         open={isModalOpen}

@@ -600,7 +600,7 @@ export default function ProductsTable() {
                   </th>
                   
                   {showActionsColumn && (
-                    <th scope="col" className="px-4 py-3 text-center text-sm font-semibold">
+                    <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">
                       الإجراءات
                     </th>
                   )}

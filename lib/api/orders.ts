@@ -1,4 +1,5 @@
 import { apiClient } from "./axios-config"
+import { saveAs } from "file-saver"
 
 // API Status enum (matches backend)
 export enum OrderStatusEnum {
@@ -36,6 +37,15 @@ export type OrderItem = {
   quantity: number
   unitPrice: number
   subtotal: number
+}
+
+export type ExportOrdersBody = {
+  orderIds?: number[]
+  status?: number
+  searchTerm?: string
+  startDate?: string // Format: yyyy-MM-dd
+  endDate?: string   // Format: yyyy-MM-dd
+  format: 2 | 1 // 2 for PDF, 1 for Excel
 }
 
 // Order summary type
@@ -95,6 +105,8 @@ export type SearchOrdersParams = {
   pageSize?: number
   searchTerm?: string
   status?: OrderStatusEnum | "all"
+  startDate?: string // Format: yyyy-MM-dd
+  endDate?: string   // Format: yyyy-MM-dd
 }
 
 export async function getAllOrders(params: SearchOrdersParams = {}) {
@@ -106,6 +118,8 @@ export async function getAllOrders(params: SearchOrdersParams = {}) {
   if (params.status !== undefined && params.status !== "all") {
     queryParams.append("status", params.status.toString())
   }
+  if (params.startDate) queryParams.append("startDate", params.startDate)
+  if (params.endDate) queryParams.append("endDate", params.endDate)
 
   const url = `/v1/Orders/all${queryParams.toString() ? `?${queryParams.toString()}` : ""}`
 
@@ -119,22 +133,31 @@ export async function getOrderById(id: number) {
   return response.data
 }
 
-// Export orders to CSV/Excel
-export async function exportOrders(params: SearchOrdersParams = {}) {
-  const queryParams = new URLSearchParams()
+// Export orders to PDF/Excel
+export async function exportOrders(body: ExportOrdersBody) {
+  try {
+    const response = await apiClient.post("/v1/Orders/export", body, {
+      responseType: "blob", // <-- 4. نطلب من axios إرجاع الملف كـ "blob"
+    })
 
-  if (params.searchTerm) queryParams.append("searchTerm", params.searchTerm)
-  if (params.status !== undefined && params.status !== "all") {
-    queryParams.append("status", params.status.toString())
+    // 5. تحديد اسم الملف بناءً على الـ format
+    const formatExtension = body.format === 1 ? "xlsx" : "pdf"
+    const filename = `Orders_Export_${new Date().toISOString().split('T')[0]}.${formatExtension}`
+
+    // 6. بدء عملية تحميل الملف في المتصفح
+    saveAs(new Blob([response.data]), filename)
+
+    return { success: true }
+  } catch (error: any) {
+    console.error("[API] Export orders error:", error)
+    // محاولة قراءة رسالة الخطأ من الـ blob (إذا فشل)
+    if (error.response && error.response.data.type === "application/json") {
+      const errorJson = await error.response.data.text()
+      const errorObj = JSON.parse(errorJson)
+      throw new Error(errorObj.message || "فشل تصدير الملف")
+    }
+    throw new Error(error.message || "فشل تصدير الملف")
   }
-
-  const url = `/v1/Orders/export${queryParams.toString() ? `?${queryParams.toString()}` : ""}`
-
-  const response = await apiClient.get(url, {
-    responseType: "blob",
-  })
-
-  return response.data
 }
 
 export async function updateOrderStatus(orderId: number, status: OrderStatusEnum) {
