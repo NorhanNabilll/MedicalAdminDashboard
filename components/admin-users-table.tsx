@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Trash2, Edit2, Search, Plus, ChevronLeft, ChevronRight } from "lucide-react"
 import AdminUserDialog from "./admin-user-dialog"
-import { formatNumberEnglish } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 
 export default function AdminUsersTable() {
@@ -137,23 +136,51 @@ export default function AdminUsersTable() {
     }
   }
 
-  const getPageNumbers = () => {
+const getPageNumbers = () => {
+    if (!pagination) return []
+
     const totalPages = pagination.totalPages
     const pages: (number | string)[] = []
+    const siblingCount = 1 // عدد الصفحات التي تظهر حول الصفحة الحالية
 
-    if (totalPages <= 4) {
-      // Show all pages if 4 or fewer
+    // --- 1. هذا هو التعديل الذي طلبته ---
+    // إذا كان عدد الصفحات 4 أو أقل، اعرضهم كلهم
+    const totalPagesToShowSimple = 4
+    if (totalPages <= totalPagesToShowSimple) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i)
       }
-    } else {
-      // Show first 3 pages + ellipsis + last page
-      pages.push(1)
-      pages.push(2)
-      pages.push(3)
-      pages.push("...")
-      pages.push(totalPages)
+      return pages
     }
+    // --- نهاية التعديل ---
+
+
+    // --- 2. "التغييرات اللازمة" (لوجيك ديناميكي) ---
+    // اعرض الصفحة الأولى دائماً
+    pages.push(1)
+
+    // 3. احسب نطاق الصفحات (قبل وبعد الصفحة الحالية)
+    // (نضمن أن النطاق لا يتجاوز 2 أو (إجمالي الصفحات - 1))
+    const leftSiblingIndex = Math.max(currentPage - siblingCount, 2)
+    const rightSiblingIndex = Math.min(currentPage + siblingCount, totalPages - 1)
+
+    // 4. اعرض "..." جهة اليسار إذا لزم الأمر
+    if (leftSiblingIndex > 2) {
+      pages.push("...")
+    }
+
+    // 5. اعرض الأرقام التي في المنتصف
+    for (let i = leftSiblingIndex; i <= rightSiblingIndex; i++) {
+      pages.push(i)
+    }
+
+    // 6. اعرض "..." جهة اليمين إذا لزم الأمر
+    if (rightSiblingIndex < totalPages - 1) {
+      pages.push("...")
+    }
+
+    // 7. اعرض الصفحة الأخيرة دائماً
+    pages.push(totalPages)
 
     return pages
   }
@@ -319,9 +346,9 @@ export default function AdminUsersTable() {
               {pagination && pagination.totalCount > 0 && (
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t">
                   <div className="text-sm text-muted-foreground px-4">
-                    عرض {formatNumberEnglish((currentPage - 1) * pageSize + 1)} -{" "}
-                    {formatNumberEnglish(Math.min(currentPage * pageSize, pagination.totalCount))} من{" "}
-                    {formatNumberEnglish(pagination.totalCount)} مسؤول
+                    عرض {(currentPage - 1) * pageSize + 1} -{" "}
+                    {Math.min(currentPage * pageSize, pagination.totalCount)} من{" "}
+                    {pagination.totalCount} مسؤول
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -349,7 +376,7 @@ export default function AdminUsersTable() {
                             onClick={() => goToPage(page as number)}
                             className="h-8 w-8 p-0"
                           >
-                            {formatNumberEnglish(page as number)}
+                            {page as number}
                           </Button>
                         ),
                       )}

@@ -82,20 +82,46 @@ function UsersPage() {
 
     const totalPages = pagination.totalPages
     const pages: (number | string)[] = []
+    const siblingCount = 1 // عدد الصفحات التي تظهر حول الصفحة الحالية
 
-    if (totalPages <= 4) {
-      // Show all pages if 4 or fewer
+    // --- 1. هذا هو التعديل الذي طلبته ---
+    // إذا كان عدد الصفحات 4 أو أقل، اعرضهم كلهم
+    const totalPagesToShowSimple = 4
+    if (totalPages <= totalPagesToShowSimple) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i)
       }
-    } else {
-      // Show first 3 pages + ellipsis + last page
-      pages.push(1)
-      pages.push(2)
-      pages.push(3)
-      pages.push("...")
-      pages.push(totalPages)
+      return pages
     }
+    // --- نهاية التعديل ---
+
+
+    // --- 2. "التغييرات اللازمة" (لوجيك ديناميكي) ---
+    // اعرض الصفحة الأولى دائماً
+    pages.push(1)
+
+    // 3. احسب نطاق الصفحات (قبل وبعد الصفحة الحالية)
+    // (نضمن أن النطاق لا يتجاوز 2 أو (إجمالي الصفحات - 1))
+    const leftSiblingIndex = Math.max(currentPage - siblingCount, 2)
+    const rightSiblingIndex = Math.min(currentPage + siblingCount, totalPages - 1)
+
+    // 4. اعرض "..." جهة اليسار إذا لزم الأمر
+    if (leftSiblingIndex > 2) {
+      pages.push("...")
+    }
+
+    // 5. اعرض الأرقام التي في المنتصف
+    for (let i = leftSiblingIndex; i <= rightSiblingIndex; i++) {
+      pages.push(i)
+    }
+
+    // 6. اعرض "..." جهة اليمين إذا لزم الأمر
+    if (rightSiblingIndex < totalPages - 1) {
+      pages.push("...")
+    }
+
+    // 7. اعرض الصفحة الأخيرة دائماً
+    pages.push(totalPages)
 
     return pages
   }
@@ -542,7 +568,7 @@ function UsersPage() {
               <Select
                 value={newUser.type}
                 onValueChange={(value) => setNewUser({ ...newUser, type: value })}
-                disabled={!isEditMode}
+                disabled={true} // disabled={!isEditMode}
               >
                 <SelectTrigger id="type" className="text-right">
                   <SelectValue />

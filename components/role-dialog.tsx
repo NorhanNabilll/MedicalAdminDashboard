@@ -61,23 +61,23 @@ export default function RoleDialog({ open, onOpenChange, role, onSave }: RoleDia
       moduleName: "المستخدمين",
       permissions: [
         { id: 9, name: "عرض", moduleName: "المستخدمين" },
-        { id: 11, name: "إضافة", moduleName: "المستخدمين" },
-        { id: 12, name: "تعديل", moduleName: "المستخدمين" },
-        { id: 13, name: "حذف", moduleName: "المستخدمين" },
+        { id: 10, name: "إضافة", moduleName: "المستخدمين" },
+        { id: 11, name: "تعديل", moduleName: "المستخدمين" },
+        { id: 12, name: "حذف", moduleName: "المستخدمين" },
       ],
     },
     {
       moduleName: "الطلبات",
       permissions: [
-        { id: 14, name: "عرض", moduleName: "الطلبات" },
-        { id: 15, name: "تعديل", moduleName: "الطلبات" },
+        { id: 13, name: "عرض", moduleName: "الطلبات" },
+        { id: 14, name: "تعديل", moduleName: "الطلبات" },
       ],
     },
     {
       moduleName: "الوصفات",
       permissions: [
-        { id: 16, name: "عرض", moduleName: "الوصفات" },
-        { id: 17, name: "تعديل", moduleName: "الوصفات" },
+        { id: 15, name: "عرض", moduleName: "الوصفات" },
+        { id: 16, name: "تعديل", moduleName: "الوصفات" },
       ],
     },
   ]

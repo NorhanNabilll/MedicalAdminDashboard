@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { getAllOrders, OrderStatusEnum, getStatusDisplay, type Order, exportOrders, type ExportOrdersBody } from "@/lib/api/orders"
 import { useToast } from "@/hooks/use-toast"
-import { formatDateArabic, formatCurrencyEnglish, cn } from "@/lib/utils"
+import { formatDateArabic, cn } from "@/lib/utils"
 import useSWR from "swr"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { OrderDetailsModal } from "@/components/order-details-modal"
@@ -208,15 +208,52 @@ export default function OrdersTable({ defaultStatus = "all" }: { defaultStatus?:
     }
   }
 
-  const getPageNumbers = () => {
+const getPageNumbers = () => {
     if (!pagination) return []
+
     const totalPages = pagination.totalPages
     const pages: (number | string)[] = []
-    if (totalPages <= 4) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      pages.push(1); pages.push(2); pages.push(3); pages.push("..."); pages.push(totalPages);
+    const siblingCount = 1 // عدد الصفحات التي تظهر حول الصفحة الحالية
+
+    // --- 1. هذا هو التعديل الذي طلبته ---
+    // إذا كان عدد الصفحات 4 أو أقل، اعرضهم كلهم
+    const totalPagesToShowSimple = 4
+    if (totalPages <= totalPagesToShowSimple) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i)
+      }
+      return pages
     }
+    // --- نهاية التعديل ---
+
+
+    // --- 2. "التغييرات اللازمة" (لوجيك ديناميكي) ---
+    // اعرض الصفحة الأولى دائماً
+    pages.push(1)
+
+    // 3. احسب نطاق الصفحات (قبل وبعد الصفحة الحالية)
+    // (نضمن أن النطاق لا يتجاوز 2 أو (إجمالي الصفحات - 1))
+    const leftSiblingIndex = Math.max(currentPage - siblingCount, 2)
+    const rightSiblingIndex = Math.min(currentPage + siblingCount, totalPages - 1)
+
+    // 4. اعرض "..." جهة اليسار إذا لزم الأمر
+    if (leftSiblingIndex > 2) {
+      pages.push("...")
+    }
+
+    // 5. اعرض الأرقام التي في المنتصف
+    for (let i = leftSiblingIndex; i <= rightSiblingIndex; i++) {
+      pages.push(i)
+    }
+
+    // 6. اعرض "..." جهة اليمين إذا لزم الأمر
+    if (rightSiblingIndex < totalPages - 1) {
+      pages.push("...")
+    }
+
+    // 7. اعرض الصفحة الأخيرة دائماً
+    pages.push(totalPages)
+
     return pages
   }
 
@@ -446,11 +483,11 @@ export default function OrdersTable({ defaultStatus = "all" }: { defaultStatus?:
                           </div>
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">سعر التوصيل:</span>
-                            <span>{formatCurrencyEnglish(order.summary.shippingFee)} د.ع</span>
+                            <span>{(order.summary.shippingFee)} د.ع</span>
                           </div>
                           <div className="flex justify-between font-semibold">
                             <span>المبلغ الإجمالي:</span>
-                            <span>{formatCurrencyEnglish(order.summary.total)} د.ع</span>
+                            <span>{(order.summary.total)} د.ع</span>
                           </div>
                         </div>
 
@@ -532,10 +569,10 @@ export default function OrdersTable({ defaultStatus = "all" }: { defaultStatus?:
                             {order.shippingInfo.address}
                           </td>
                           <td className="px-4 py-4 text-sm text-muted-foreground">
-                            {formatCurrencyEnglish(order.summary.shippingFee)} د.ع
+                            {(order.summary.shippingFee)} د.ع
                           </td>
                           <td className="px-4 py-4 text-sm font-semibold">
-                            {formatCurrencyEnglish(order.summary.total)} د.ع
+                            {(order.summary.total)} د.ع
                           </td>
                           <td className="px-4 py-4 text-sm">
                             <Button variant="default" size="sm" onClick={() => handleViewDetails(order)}>
@@ -632,7 +669,7 @@ export default function OrdersTable({ defaultStatus = "all" }: { defaultStatus?:
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="filtered">تصدير الفلترة الحالية</TabsTrigger>
                 <TabsTrigger value="selected" disabled={selectedOrderIds.length === 0}>
-                  تصدير المحدد ({formatCurrencyEnglish(selectedOrderIds.length)})
+                  تصدير المحدد ({(selectedOrderIds.length)})
                 </TabsTrigger>
               </TabsList>
             </Tabs>

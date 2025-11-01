@@ -4,7 +4,7 @@ import { getAccessToken, getRefreshToken, saveTokens, clearTokens } from "./toke
 
 // Create axios instance with base configuration
 export const apiClient = axios.create({
-  baseURL: "https://localhost:7292/api",
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -100,7 +100,7 @@ apiClient.interceptors.response.use(
           if (refreshToken) {
             // Create a new axios instance without interceptors to avoid infinite loops
             const refreshClient = axios.create({
-              baseURL: "https://localhost:7292/api",
+              baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
               headers: {
                 "Content-Type": "application/json",
               },

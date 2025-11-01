@@ -60,7 +60,8 @@ export const useTokenRefresh = () => {
       }
 
       try {
-        const response = await axios.post('https://localhost:7292/api/v1/Auth/refresh', {
+        const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
+        const response = await axios.post(`${baseURL}/v1/Auth/refresh`, {
           refreshToken
         });
 

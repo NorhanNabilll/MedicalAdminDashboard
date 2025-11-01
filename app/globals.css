@@ -166,111 +166,24 @@
 }
 
 @media print {
-  /* Hide dialog overlay and make content full width */
-  [role="dialog"] {
-    max-width: 100% !important;
-    max-height: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    box-shadow: none !important;
-  }
-
-  /* Hide header and footer */
-  [role="dialog"] > div:first-child,
-  [role="dialog"] > div:last-child {
-    display: none !important;
-  }
-
-  /* Make content area full width and remove scrolling */
-  [role="dialog"] > div:nth-child(2) {
-    overflow: visible !important;
-    max-height: none !important;
-  }
-
- /* Add lines between sections in print view */
-
-.space-y-3 > div {
-
- border-bottom: 2px solid #d1d5db;
-
-padding-bottom: 1rem;
-
- margin-bottom: 1rem !important;
-
- }
-  /* Remove background colors and shadows for clean print */
-  /*
-  body {
-    background: white !important;
-  }
-*/
-  .bg-gray-50,
-  .bg-gray-100 {
-    background: white !important;
-  }
-
-  .shadow-sm,
-  .shadow,
-  .shadow-md {
-    box-shadow: none !important;
-  }
-
-  /* Style editable inputs to look like regular text */
-  input[type="number"],
-  select,
-  button[role="combobox"] {
-    border: none !important;
-    background: transparent !important;
-    padding: 0 !important;
-    appearance: none !important;
-    -webkit-appearance: none !important;
-    -moz-appearance: none !important;
-    font-weight: 600 !important;
-    color: #111827 !important;
-  }
-
-  /* Hide all interactive buttons */
-  button:not(.print-keep) {
-    display: none !important;
-  }
-
-  /* Hide delete buttons and edit controls */
-  [class*="hover:bg-red"],
-  [class*="hover:bg-gray"] {
-    display: none !important;
-  }
-
-  /* Ensure proper spacing and borders for print */
-  .border-gray-200 {
-    border-color: #e5e7eb !important;
-  }
-
-  /* Make sure text is black for good contrast */
-  .text-gray-600,
-  .text-gray-700,
-  .text-gray-800,
-  .text-gray-900 {
-    color: #111827 !important;
-  }
-
-  /* Remove rounded corners for cleaner print */
-  .rounded-lg,
-  .rounded-md {
-    border-radius: 0 !important;
-  }
-
-  /* Ensure tables print properly */
-  table {
-    page-break-inside: auto;
-  }
-
-  tr {
-    page-break-inside: avoid;
-    page-break-after: auto;
-  }
-
-  /* Add page margins */
   @page {
-    margin: 1cm;
+    size: A4;
+    margin: 15mm;
+  }
+  
+  body * {
+    visibility: hidden;
+  }
+  
+  .print-container,
+  .print-container * {
+    visibility: visible;
+  }
+  
+  .print-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
   }
 }
