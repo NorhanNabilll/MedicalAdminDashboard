@@ -46,7 +46,7 @@ export default function LoginForm() {
     // (ده كود خطوة اللوجن العادية)
     setIsLoading(true)
 
-    if (!recaptchaToken) {
+   /* if (!recaptchaToken) {
       toast({
         title: "الرجاء التحقق",
         description: "يرجى تأكيد أنك لست روبوتًا.",
@@ -54,11 +54,11 @@ export default function LoginForm() {
       })
       setIsLoading(false)
       return
-    }
+    }*/
 
     try {
       // (5ب) استقبال الرد من دالة اللوجن المعدلة
-      const response = await login(email, password, recaptchaToken)
+      const response = await login(email, password, recaptchaToken== null ? "" : recaptchaToken);
       
       if (response.requiresMFA) {
         // --- 5ج. الانتقال لخطوة الـ MFA ---
