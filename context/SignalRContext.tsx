@@ -73,7 +73,7 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({ child
     isConnectingRef.current = true;
 
     const newConnection = new signalR.HubConnectionBuilder()
-      .withUrl('https://localhost:7292/notificationHub', {
+      .withUrl(`${process.env.NEXT_PUBLIC_API_HOST}/notificationHub`, {
         accessTokenFactory: () => {
           // ✅ دايماً يجيب الـ token الحالي من localStorage
           const token = getAccessToken();
