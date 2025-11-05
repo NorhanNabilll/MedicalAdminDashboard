@@ -21,15 +21,15 @@ export const useTokenRefresh = () => {
         const now = Date.now();
         const timeUntilExpiry = expiryTime - now;
 
-        // ✅ Refresh قبل الانتهاء بـ 2 دقيقة (120000 ms)
+        //  Refresh قبل الانتهاء بـ 2 دقيقة (120000 ms)
         const refreshTime = timeUntilExpiry - 120000;
 
-        console.log('⏰ Token expires in:', Math.round(timeUntilExpiry / 1000), 'seconds');
-        console.log('⏰ Will refresh in:', Math.round(refreshTime / 1000), 'seconds');
+        console.log(' Token expires in:', Math.round(timeUntilExpiry / 1000), 'seconds');
+        console.log(' Will refresh in:', Math.round(refreshTime / 1000), 'seconds');
 
         // لو الوقت المتبقي أقل من 2 دقيقة، اعمل refresh فوراً
         if (refreshTime <= 0) {
-          console.log('⚠️ Token expired or expiring soon, refreshing now...');
+          console.log('Token expired or expiring soon, refreshing now...');
           performTokenRefresh();
           return;
         }
@@ -40,12 +40,12 @@ export const useTokenRefresh = () => {
         }
 
         refreshTimerRef.current = setTimeout(() => {
-          console.log('🔄 Auto-refreshing token (scheduled)...');
+          console.log(' Auto-refreshing token (scheduled)...');
           performTokenRefresh();
         }, refreshTime);
 
       } catch (error) {
-        console.error('❌ Error decoding token:', error);
+        console.error(' Error decoding token:', error);
       }
     };
 
@@ -53,7 +53,7 @@ export const useTokenRefresh = () => {
       const refreshToken = getRefreshToken();
       
       if (!refreshToken) {
-        console.error('❌ No refresh token available');
+        console.error(' No refresh token available');
         clearTokens();
         window.location.href = '/login';
         return;
@@ -70,9 +70,9 @@ export const useTokenRefresh = () => {
           
           saveTokens(newAccessToken, newRefreshToken);
           
-          console.log('✅ Token refreshed successfully (silent refresh)');
+          console.log(' Token refreshed successfully (silent refresh)');
           
-          // ✅ أرسل event لإعلام SignalR
+          // أرسل event لإعلام SignalR
           window.dispatchEvent(new CustomEvent('tokenRefreshed', { 
             detail: { accessToken: newAccessToken } 
           }));
@@ -83,7 +83,7 @@ export const useTokenRefresh = () => {
           throw new Error('Token refresh failed');
         }
       } catch (error) {
-        console.error('❌ Silent token refresh failed:', error);
+        console.error(' Silent token refresh failed:', error);
         clearTokens();
         window.location.href = '/login';
       }
