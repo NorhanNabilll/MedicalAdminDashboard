@@ -8,7 +8,7 @@ export const apiClient = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  timeout: 15000, // 15 seconds timeout
+ // timeout: 15000, // 15 seconds timeout
 })
 
 let isRefreshing = false
