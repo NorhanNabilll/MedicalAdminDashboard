@@ -254,20 +254,12 @@ export function OrderDetailsModal({ order, open, onOpenChange, onUpdate }: Order
   const handlePrint = () => {
     if (!editableOrder) return
 
-    const printWindow = document.createElement("iframe")
-    printWindow.style.position = "fixed"
-    printWindow.style.top = "-9999px"
-    printWindow.style.left = "-9999px"
-    printWindow.style.width = "1px"
-    printWindow.style.height = "1px"
-    printWindow.style.border = "none"
-    document.body.appendChild(printWindow)
-
-    const htmlContent = `
+    const printContent = `
       <!DOCTYPE html>
       <html dir="rtl" lang="ar">
       <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>فاتورة الطلب</title>
         <style>
           * {
@@ -278,42 +270,25 @@ export function OrderDetailsModal({ order, open, onOpenChange, onUpdate }: Order
 
           html, body {
             width: 100%;
-            height: 100%;
+            height: auto;
             margin: 0;
             padding: 0;
             background: white;
+            font-family: 'Arial', sans-serif;
           }
 
           @page {
             size: A4;
-            margin: 5mm;
-          }
-
-          @media print {
-            body {
-              margin: 0;
-              padding: 0;
-              width: 100%;
-            }
-
-            .print-content {
-              width: 100%;
-              padding: 0;
-              margin: 0;
-              page-break-after: avoid;
-              page-break-inside: avoid;
-            }
+            margin: 0;
+            padding: 0;
           }
 
           body {
-            font-family: 'Arial', sans-serif;
-            background: white;
             color: black;
             font-size: 12px;
             line-height: 1.3;
             width: 100%;
-            padding: 0;
-            margin: 0;
+            padding: 5mm;
           }
 
           .print-content {
@@ -343,7 +318,7 @@ export function OrderDetailsModal({ order, open, onOpenChange, onUpdate }: Order
 
           .section {
             margin-bottom: 6px;
-            padding: 0 8px;
+            padding: 0 4px;
           }
 
           .section-title {
@@ -387,7 +362,7 @@ export function OrderDetailsModal({ order, open, onOpenChange, onUpdate }: Order
           table th,
           table td {
             border: 1px solid #999;
-            padding: 3px;
+            padding: 2px 3px;
             text-align: right;
           }
 
@@ -402,8 +377,8 @@ export function OrderDetailsModal({ order, open, onOpenChange, onUpdate }: Order
 
           .summary {
             border: 1px solid #000;
-            padding: 6px 8px;
-            margin: 6px 8px;
+            padding: 6px 6px;
+            margin: 6px 4px;
             background-color: #f9f9f9;
             font-size: 9px;
             text-align: right;
@@ -420,6 +395,19 @@ export function OrderDetailsModal({ order, open, onOpenChange, onUpdate }: Order
             border-top: 2px solid #000;
             font-size: 10px;
             font-weight: bold;
+          }
+
+          @media print {
+            body {
+              margin: 0;
+              padding: 3mm;
+              height: auto;
+            }
+
+            .print-content {
+              page-break-after: avoid;
+              page-break-inside: avoid;
+            }
           }
         </style>
       </head>
@@ -498,26 +486,24 @@ export function OrderDetailsModal({ order, open, onOpenChange, onUpdate }: Order
             </div>
           </div>
         </div>
-
-        <script>
-          window.onload = function() {
-            setTimeout(() => {
-              window.print();
-              setTimeout(() => {
-                window.parent.document.body.removeChild(window.frameElement);
-              }, 100);
-            }, 100);
-          };
-        </script>
       </body>
       </html>
     `
 
-    const doc = printWindow.contentDocument || printWindow.contentWindow?.document
-    if (doc) {
-      doc.open()
-      doc.write(htmlContent)
-      doc.close()
+    const printWindow = window.open("", "_blank")
+    if (printWindow) {
+      printWindow.document.open()
+      printWindow.document.write(printContent)
+      printWindow.document.close()
+
+      setTimeout(() => {
+        printWindow.focus()
+        printWindow.print()
+      }, 250)
+    } else {
+      const blob = new Blob([printContent], { type: "text/html;charset=utf-8" })
+      const url = URL.createObjectURL(blob)
+      window.open(url, "_blank")
     }
   }
 
