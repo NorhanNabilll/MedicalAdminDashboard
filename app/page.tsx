@@ -36,7 +36,7 @@ export default function HomePage() {
     revalidateOnFocus: false,
   })
 
-  // ✅ الخطوة 1: تسجيل "مستمع" لتحديث الإحصائيات
+  /*// ✅ الخطوة 1: تسجيل "مستمع" لتحديث الإحصائيات
   useEffect(() => {
     // تسجيل دالة "callback" ليتم استدعاؤها عند وصول إشعار
     registerOrderCallback(() => {
@@ -44,7 +44,23 @@ export default function HomePage() {
       // عند وصول إشعار، قم بإعادة جلب بيانات الإحصائيات
       mutateStatistics();
     });
-  }, [mutateStatistics, registerOrderCallback]); // الاعتماديات لضمان عدم تكرار التسجيل
+  }, [mutateStatistics, registerOrderCallback]); // الاعتماديات لضمان عدم تكرار التسجيل*/
+  // ✅ الخطوة 1 (الحل B): استماع عام لتحديث الإحصائيات عند أي إشعار SignalR
+useEffect(() => {
+  const handleOrdersUpdated = (e: Event) => {
+    console.log('📢 ordersUpdated event received - refreshing statistics...');
+    mutateStatistics(); // يعيد جلب الإحصائيات من الـ API
+  };
+
+  // التسجيل
+  window.addEventListener('ordersUpdated', handleOrdersUpdated as EventListener);
+
+  // التنظيف عند إلغاء المكون
+  return () => {
+    window.removeEventListener('ordersUpdated', handleOrdersUpdated as EventListener);
+  };
+}, [mutateStatistics]);
+
 
   // إعادة توجيه المستخدمين غير SuperAdmin
   useEffect(() => {

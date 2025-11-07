@@ -135,9 +135,11 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({ child
         new Audio('/notification-sound.mp3').play().catch(() => {});
       } catch (e) {}
 
-      if (orderCallbackRef.current) {
-        orderCallbackRef.current();
-      }
+    //  if (orderCallbackRef.current) {
+     //   orderCallbackRef.current();
+    //  }
+
+    window.dispatchEvent(new CustomEvent('ordersUpdated', { detail: notification }));
 
       setTimeout(() => setLatestNotification(null), 5000);
     });
@@ -155,7 +157,7 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setIsConnected(false);
       });
   };
-
+/*
   // ✅ لما الـ token يتحدث، اعمل reconnect
   useEffect(() => {
     const handleTokenRefresh = async () => {
@@ -180,7 +182,7 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({ child
     window.addEventListener('tokenRefreshed', handleTokenRefresh);
     return () => window.removeEventListener('tokenRefreshed', handleTokenRefresh);
   }, []);
-
+*/
   // ✅ Cleanup
   useEffect(() => {
     return () => {

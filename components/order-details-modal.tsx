@@ -16,9 +16,9 @@ import {
   deleteOrderItem,
   updateShippingFee,
 } from "@/lib/api/orders"
-import { formatDateArabic} from "@/lib/utils"
+import { formatDateArabic } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext"
 import EditableNumberInput from "./EditableNumberInput"
 
 interface OrderDetailsModalProps {
@@ -252,13 +252,302 @@ export function OrderDetailsModal({ order, open, onOpenChange, onUpdate }: Order
   }
 
   const handlePrint = () => {
-    window.print()
+    const printWindow = window.open("", "", "width=800,height=600")
+    if (!printWindow) {
+      toast({
+        title: "خطأ",
+        description: "لم يتمكن من فتح نافذة الطباعة. تأكد من تعطيل مانع النوافذ المنبثقة",
+        variant: "destructive",
+      })
+      return
+    }
+
+    const htmlContent = `
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>طباعة الوصل - ${editableOrder.orderNumber}</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100%;
+      height: 100%;
+      background: white;
+    }
+
+    @page {
+      size: A4;
+      margin: 8mm 8mm 8mm 8mm;
+    }
+
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+      }
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      color: #333;
+      background: white;
+      padding: 0;
+      margin: 0;
+    }
+
+    .receipt {
+      max-width: 100%;
+      width: 100%;
+      background: white;
+      padding: 0;
+      margin: 0;
+      page-break-after: avoid;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #000;
+    }
+
+    .header h1 {
+      font-size: 16px;
+      margin: 0 0 4px 0;
+      font-weight: bold;
+    }
+
+    .header p {
+      font-size: 11px;
+      margin: 2px 0;
+    }
+
+    .section {
+      margin-bottom: 8px;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: bold;
+      margin: 0 0 4px 0;
+      padding-bottom: 2px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      font-size: 9px;
+    }
+
+    .info-item {
+      text-align: right;
+    }
+
+    .info-label {
+      display: block;
+      color: #666;
+      font-weight: bold;
+      font-size: 8px;
+      margin-bottom: 1px;
+    }
+
+    .info-value {
+      display: block;
+      color: #000;
+      font-weight: bold;
+      font-size: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9px;
+      margin: 4px 0;
+    }
+
+    table th {
+      background: #f5f5f5;
+      border: 1px solid #999;
+      padding: 3px;
+      text-align: right;
+      font-weight: bold;
+    }
+
+    table td {
+      border: 1px solid #999;
+      padding: 3px;
+      text-align: right;
+    }
+
+    table tbody tr:nth-child(even) {
+      background: #fafafa;
+    }
+
+    .summary-box {
+      border: 1px solid #000;
+      padding: 6px;
+      background: #f9f9f9;
+      margin-top: 6px;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 2px 0;
+      font-size: 9px;
+      text-align: right;
+    }
+
+    .summary-row.total {
+      font-size: 11px;
+      font-weight: bold;
+      border-top: 2px solid #000;
+      padding-top: 4px;
+      margin-top: 2px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 4px;
+      border-radius: 2px;
+      font-size: 8px;
+      font-weight: bold;
+      margin-top: 2px;
+    }
+
+    .badge-pending { background: #dbeafe; color: #1e40af; }
+    .badge-shipped { background: #fef3c7; color: #b45309; }
+    .badge-delivered { background: #d1fae5; color: #065f46; }
+    .badge-cancelled { background: #fee2e2; color: #991b1b; }
+  </style>
+</head>
+<body>
+  <div class="receipt">
+    <div class="header">
+      <h1>فاتورة طلب</h1>
+      <p>رقم الطلب: ${editableOrder.orderNumber}</p>
+      <p>تاريخ الطلب: ${formatDateArabic(editableOrder.orderDate)}</p>
+      <span class="badge badge-${
+        editableOrder.status === 0
+          ? "pending"
+          : editableOrder.status === 1
+            ? "shipped"
+            : editableOrder.status === 2
+              ? "delivered"
+              : "cancelled"
+      }">
+        ${
+          editableOrder.status === 0
+            ? "تم الطلب"
+            : editableOrder.status === 1
+              ? "تم الشحن"
+              : editableOrder.status === 2
+                ? "تم الاستلام"
+                : "تم الإلغاء"
+        }
+      </span>
+    </div>
+
+    <div class="section">
+      <div class="section-title">معلومات المريض</div>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">اسم المريض:</span>
+          <span class="info-value">${editableOrder.shippingInfo.fullName}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">رقم الهاتف:</span>
+          <span class="info-value" dir="ltr">${editableOrder.shippingInfo.phoneNumber}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">العنوان:</span>
+          <span class="info-value">${editableOrder.shippingInfo.address}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">المنتجات المطلوبة</div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 30px">#</th>
+            <th>المنتج</th>
+            <th style="width: 50px">الكمية</th>
+            <th style="width: 60px">السعر</th>
+            <th style="width: 70px">الإجمالي</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${editableOrder.items
+            .map(
+              (item, index) => `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${item.productName}</td>
+              <td>${item.quantity}</td>
+              <td>${item.unitPrice} د.ع</td>
+              <td>${item.subtotal} د.ع</td>
+            </tr>
+          `,
+            )
+            .join("")}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="summary-box">
+      <div class="summary-row">
+        <span>المجموع الفرعي:</span>
+        <span>${editableOrder.summary.subtotal} د.ع</span>
+      </div>
+      <div class="summary-row">
+        <span>أجور التوصيل:</span>
+        <span>${editableOrder.summary.shippingFee} د.ع</span>
+      </div>
+      <div class="summary-row">
+        <span>إجمالي المنتجات:</span>
+        <span>${editableOrder.summary.totalItems}</span>
+      </div>
+      <div class="summary-row total">
+        <span>المبلغ الإجمالي:</span>
+        <span>${editableOrder.summary.total} د.ع</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.print();
+    window.onafterprint = function() {
+      window.close();
+    };
+  </script>
+</body>
+</html>
+    `
+
+    printWindow.document.write(htmlContent)
+    printWindow.document.close()
   }
 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-[98vw] max-h-[95vh] p-0 gap-0 flex flex-col overflow-hidden bg-gray-50 print:hidden" dir="rtl">
+        <DialogContent
+          className="max-w-[98vw] max-h-[95vh] p-0 gap-0 flex flex-col overflow-hidden bg-gray-50 print:hidden"
+          dir="rtl"
+        >
           <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 bg-white shrink-0">
             <h2 className="text-base font-bold text-gray-800 text-right">تفاصيل الطلب</h2>
             <button
@@ -359,9 +648,7 @@ export function OrderDetailsModal({ order, open, onOpenChange, onUpdate }: Order
                     <tbody className="divide-y divide-gray-200">
                       {editableOrder.items.map((item, index) => (
                         <tr key={item.id}>
-                          <td className="px-3 py-2 whitespace-nowrap text-gray-600 text-right text-xs">
-                            {index + 1}
-                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap text-gray-600 text-right text-xs">{index + 1}</td>
                           <td className="px-3 py-2 whitespace-nowrap text-right">
                             <div className="font-semibold text-gray-900 text-xs">{item.productName}</div>
                           </td>
@@ -440,9 +727,7 @@ export function OrderDetailsModal({ order, open, onOpenChange, onUpdate }: Order
                         </div>
                         <div className="text-right">
                           <div className="text-gray-600 mb-0.5">سعر الوحدة</div>
-                          <div className="font-medium text-gray-900 text-xs">
-                            {item.unitPrice} د.ع
-                          </div>
+                          <div className="font-medium text-gray-900 text-xs">{item.unitPrice} د.ع</div>
                         </div>
                       </div>
                       <Separator />
@@ -460,9 +745,7 @@ export function OrderDetailsModal({ order, open, onOpenChange, onUpdate }: Order
                 <div className="space-y-1.5">
                   <div className="flex justify-between text-xs text-gray-600">
                     <span>المجموع الفرعي</span>
-                    <span className="font-semibold text-gray-900">
-                      {editableOrder.summary.subtotal} د.ع
-                    </span>
+                    <span className="font-semibold text-gray-900">{editableOrder.summary.subtotal} د.ع</span>
                   </div>
                   <div className="flex justify-between text-xs text-gray-600">
                     <span>أجور التوصيل</span>
@@ -479,16 +762,12 @@ export function OrderDetailsModal({ order, open, onOpenChange, onUpdate }: Order
                         <span className="text-xs">د.ع</span>
                       </div>
                     ) : (
-                      <span className="font-semibold text-gray-900">
-                        {editableOrder.summary.shippingFee} د.ع
-                      </span>
+                      <span className="font-semibold text-gray-900">{editableOrder.summary.shippingFee} د.ع</span>
                     )}
                   </div>
                   <div className="flex justify-between text-xs text-gray-600">
                     <span>إجمالي عدد المنتجات</span>
-                    <span className="font-semibold text-gray-900">
-                      {editableOrder.summary.totalItems}
-                    </span>
+                    <span className="font-semibold text-gray-900">{editableOrder.summary.totalItems}</span>
                   </div>
                   <div className="border-t border-gray-200 my-1.5"></div>
                   <div className="flex justify-between text-sm font-bold text-gray-900">
@@ -519,264 +798,6 @@ export function OrderDetailsModal({ order, open, onOpenChange, onUpdate }: Order
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Print Layout - Hidden on screen, visible only when printing */}
-      {open && editableOrder && (
-        <div ref={printRef} className="hidden print:block" dir="rtl">
-          <div className="print-container">
-            <style jsx>{`
-              @media print {
-                @page {
-                  size: A4;
-                  margin: 15mm;
-                }
-                
-                html, body {
-                  height: auto !important;
-                  overflow: hidden !important;
-                  margin: 0 !important;
-                  padding: 0 !important;
-                }
-                
-                * {
-                  print-color-adjust: exact;
-                  -webkit-print-color-adjust: exact;
-                }
-                
-                body * {
-                  visibility: hidden;
-                }
-                
-                .print-container,
-                .print-container * {
-                  visibility: visible;
-                }
-                
-                .print-container {
-                  position: absolute;
-                  left: 0;
-                  top: 0;
-                  width: 100%;
-                  background: white;
-                  padding: 0;
-                  margin: 0;
-                  page-break-after: avoid !important;
-                  page-break-inside: avoid !important;
-                }
-              }
-              
-              .print-header {
-                text-align: center;
-                margin-bottom: 15px;
-                padding-bottom: 10px;
-                border-bottom: 2px solid #333;
-              }
-              
-              .print-title {
-                font-size: 18px;
-                font-weight: bold;
-                color: #111;
-                margin-bottom: 5px;
-              }
-              
-              .print-order-number {
-                font-size: 14px;
-                color: #555;
-              }
-              
-              .print-section {
-                margin-bottom: 12px;
-              }
-              
-              .print-section-title {
-                font-size: 13px;
-                font-weight: bold;
-                color: #111;
-                margin-bottom: 6px;
-                padding-bottom: 3px;
-                border-bottom: 1px solid #ddd;
-              }
-              
-              .print-info-grid {
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                gap: 10px;
-                font-size: 11px;
-              }
-              
-              .print-info-item {
-                text-align: right;
-              }
-              
-              .print-info-label {
-                color: #666;
-                font-weight: 500;
-                display: block;
-                margin-bottom: 2px;
-              }
-              
-              .print-info-value {
-                color: #111;
-                font-weight: 600;
-              }
-              
-              .print-table {
-                width: 100%;
-                border-collapse: collapse;
-                font-size: 10px;
-                margin-top: 8px;
-              }
-              
-              .print-table th {
-                background-color: #f5f5f5;
-                padding: 6px 8px;
-                text-align: right;
-                font-weight: 600;
-                border: 1px solid #ddd;
-                color: #111;
-              }
-              
-              .print-table td {
-                padding: 6px 8px;
-                border: 1px solid #ddd;
-                text-align: right;
-              }
-              
-              .print-table tbody tr:nth-child(even) {
-                background-color: #fafafa;
-              }
-              
-              .print-summary {
-                margin-top: 15px;
-                border: 1px solid #ddd;
-                padding: 10px;
-                background-color: #f9f9f9;
-              }
-              
-              .print-summary-row {
-                display: flex;
-                justify-content: space-between;
-                padding: 4px 0;
-                font-size: 11px;
-              }
-              
-              .print-summary-row.total {
-                font-size: 13px;
-                font-weight: bold;
-                border-top: 2px solid #333;
-                padding-top: 8px;
-                margin-top: 6px;
-              }
-              
-              .print-status-badge {
-                display: inline-block;
-                padding: 3px 8px;
-                border-radius: 4px;
-                font-size: 10px;
-                font-weight: 600;
-              }
-              
-              .status-pending {
-                background-color: #dbeafe;
-                color: #1e40af;
-              }
-              
-              .status-shipped {
-                background-color: #fef3c7;
-                color: #b45309;
-              }
-              
-              .status-delivered {
-                background-color: #d1fae5;
-                color: #065f46;
-              }
-              
-              .status-cancelled {
-                background-color: #fee2e2;
-                color: #991b1b;
-              }
-            `}</style>
-            
-            <div className="print-header">
-              <div className="print-title">فاتورة طلب</div>
-              <div className="print-order-number">رقم الطلب: {editableOrder.orderNumber}</div>
-              <div className="print-order-number">تاريخ الطلب: {formatDateArabic(editableOrder.orderDate)}</div>
-              <div style={{ marginTop: '8px' }}>
-                <span className={`print-status-badge status-${
-                  editableOrder.status === OrderStatusEnum.Pending ? 'pending' :
-                  editableOrder.status === OrderStatusEnum.Shipped ? 'shipped' :
-                  editableOrder.status === OrderStatusEnum.Delivered ? 'delivered' : 'cancelled'
-                }`}>
-                  {getStatusDisplay(editableOrder.status)}
-                </span>
-              </div>
-            </div>
-
-            <div className="print-section">
-              <div className="print-section-title">معلومات المريض</div>
-              <div className="print-info-grid">
-                <div className="print-info-item">
-                  <span className="print-info-label">اسم المريض:</span>
-                  <span className="print-info-value">{editableOrder.shippingInfo.fullName}</span>
-                </div>
-                <div className="print-info-item">
-                  <span className="print-info-label">رقم الهاتف:</span>
-                  <span className="print-info-value" dir="ltr">{editableOrder.shippingInfo.phoneNumber}</span>
-                </div>
-                <div className="print-info-item">
-                  <span className="print-info-label">العنوان:</span>
-                  <span className="print-info-value">{editableOrder.shippingInfo.address}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="print-section">
-              <div className="print-section-title">المنتجات المطلوبة</div>
-              <table className="print-table">
-                <thead>
-                  <tr>
-                    <th style={{ width: '40px' }}>#</th>
-                    <th>المنتج</th>
-                    <th style={{ width: '60px' }}>الكمية</th>
-                    <th style={{ width: '80px' }}>سعر الوحدة</th>
-                    <th style={{ width: '90px' }}>الإجمالي الفرعي</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {editableOrder.items.map((item, index) => (
-                    <tr key={item.id}>
-                      <td>{index + 1}</td>
-                      <td><strong>{item.productName}</strong></td>
-                      <td>{item.quantity}</td>
-                      <td>{item.unitPrice} د.ع</td>
-                      <td><strong>{item.subtotal} د.ع</strong></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="print-summary">
-              <div className="print-summary-row">
-                <span>المجموع الفرعي:</span>
-                <span><strong>{editableOrder.summary.subtotal} د.ع</strong></span>
-              </div>
-              <div className="print-summary-row">
-                <span>أجور التوصيل:</span>
-                <span><strong>{editableOrder.summary.shippingFee} د.ع</strong></span>
-              </div>
-              <div className="print-summary-row">
-                <span>إجمالي عدد المنتجات:</span>
-                <span><strong>{editableOrder.summary.totalItems}</strong></span>
-              </div>
-              <div className="print-summary-row total">
-                <span>المبلغ الإجمالي:</span>
-                <span>{editableOrder.summary.total} د.ع</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   )
 }

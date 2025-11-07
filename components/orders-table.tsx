@@ -116,12 +116,25 @@ export default function OrdersTable({ defaultStatus = "all" }: { defaultStatus?:
     return () => clearTimeout(timer)
   }, [searchQuery])
 
-  useEffect(() => {
+ /* useEffect(() => {
     registerOrderCallback(() => {
       console.log('Order created - refreshing table...');
       mutate();
     });
-  }, [mutate, registerOrderCallback]);
+  }, [mutate, registerOrderCallback]);*/
+  useEffect(() => {
+  const handleOrdersUpdated = (e: Event) => {
+    console.log('📦 ordersUpdated event received - refreshing orders table...');
+    mutate(); // يعيد تحميل الطلبات من الـ API
+  };
+
+  window.addEventListener('ordersUpdated', handleOrdersUpdated as EventListener);
+
+  return () => {
+    window.removeEventListener('ordersUpdated', handleOrdersUpdated as EventListener);
+  };
+}, [mutate]);
+
   
   useEffect(() => {
     setSelectedOrderIds([])
