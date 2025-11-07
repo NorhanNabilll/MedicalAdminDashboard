@@ -37,7 +37,7 @@ export default function ProfileMenu() {
         const parsedAdmin = JSON.parse(adminData)
         setAdmin(parsedAdmin)
       } catch (error) {
-        console.error("Failed to parse admin data:", error)
+        //console.error("Failed to parse admin data:", error)
       }
     }
   }, [])
@@ -48,7 +48,7 @@ export default function ProfileMenu() {
       await logout()
       router.push("/login")
     } catch (error) {
-      console.error("Logout failed:", error)
+      //console.error("Logout failed:", error)
       // Clear tokens and redirect even if logout API fails
       localStorage.removeItem("accessToken")
       localStorage.removeItem("refreshToken")

@@ -52,7 +52,7 @@ export type UpdateProductData = CreateProductData & {
 
 // Search products with filters and pagination
 export async function searchProducts(params: SearchProductsParams = {}) {
-  console.log("[] Searching products with params:", params)
+  //console.log("[] Searching products with params:", params)
 
   const queryParams = new URLSearchParams()
 
@@ -70,21 +70,21 @@ export async function searchProducts(params: SearchProductsParams = {}) {
 
 // Get product by ID
 export async function getProductById(id: number) {
-  console.log("[] Getting product by ID:", id)
+  //console.log("[] Getting product by ID:", id)
   const response = await apiClient.get(`/v1/Products/${id}`)
   return response.data
 }
 
 // Get product by barcode
 export async function getProductByBarcode(barcode: string) {
-  console.log("[] Getting product by barcode:", barcode)
+  //console.log("[] Getting product by barcode:", barcode)
   const response = await apiClient.get(`/v1/Products/by-barcode/${barcode}`)
   return response.data
 }
 
 // Create product with image upload
 export async function createProduct(data: CreateProductData) {
-  console.log("[] Creating product:", data.name)
+  //console.log("[] Creating product:", data.name)
 
   const formData = new FormData()
   formData.append("Name", data.name)
@@ -115,7 +115,7 @@ export async function createProduct(data: CreateProductData) {
 
 // Update product with image upload
 export async function updateProduct(data: UpdateProductData) {
-  console.log("[] Updating product:", data.id)
+  //console.log("[] Updating product:", data.id)
 
   const formData = new FormData()
   formData.append("Name", data.name)
@@ -146,7 +146,7 @@ export async function updateProduct(data: UpdateProductData) {
 
 // Delete product
 export async function deleteProduct(id: number) {
-  console.log("[] Deleting product:", id)
+  //console.log("[] Deleting product:", id)
   const response = await apiClient.delete(`/v1/Products/${id}`)
   return response.data
 }

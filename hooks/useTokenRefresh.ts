@@ -19,7 +19,7 @@ export const useTokenRefresh = () => {
       
       // ✅ لو مفيش tokens، بس نظف ومتعملش redirect
       if (!token || !refreshToken) {
-        console.log('ℹ️ No tokens found');
+        //console.log('ℹ️ No tokens found');
         clearTokens();
         return; // ✅ بس كده! مفيش redirect
       }
@@ -31,14 +31,14 @@ export const useTokenRefresh = () => {
         const timeUntilExpiry = expiryTime - now;
 
         if (timeUntilExpiry <= 120000) {
-          console.log('⚠️ Token expiring soon, refreshing...');
+          //console.log('⚠️ Token expiring soon, refreshing...');
           await performTokenRefresh();
         } else {
-          console.log('✅ Token valid, scheduling refresh');
+          //console.log('✅ Token valid, scheduling refresh');
           scheduleTokenRefresh();
         }
       } catch (error) {
-        console.error('❌ Error validating token');
+        //console.error('❌ Error validating token');
         clearTokens();
         // ✅ مفيش redirect هنا برضو
       }
@@ -68,7 +68,7 @@ export const useTokenRefresh = () => {
           performTokenRefresh();
         }, refreshTime);
       } catch (error) {
-        console.error('❌ Error scheduling refresh');
+        //console.error('❌ Error scheduling refresh');
       }
     };
 
@@ -76,7 +76,7 @@ export const useTokenRefresh = () => {
       const refreshToken = getRefreshToken();
       
       if (!refreshToken) {
-        console.log('❌ No refresh token');
+        //console.log('❌ No refresh token');
         clearTokens();
         return; // ✅ مفيش redirect
       }
@@ -91,7 +91,7 @@ export const useTokenRefresh = () => {
           const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data;
           
           saveTokens(newAccessToken, newRefreshToken);
-          console.log('✅ Token refreshed');
+          //console.log('✅ Token refreshed');
           
           window.dispatchEvent(new CustomEvent('tokenRefreshed', { 
             detail: { accessToken: newAccessToken } 
@@ -100,7 +100,7 @@ export const useTokenRefresh = () => {
           scheduleTokenRefresh();
         }
       } catch (error) {
-        console.error('❌ Token refresh failed');
+        //console.error('❌ Token refresh failed');
         clearTokens();
         // ✅ مفيش redirect
       }

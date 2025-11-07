@@ -108,7 +108,7 @@ export default function AdminUserDialog({ open, onOpenChange, user, roles, onSav
       onSave()
       onOpenChange(false)
     } catch (error: any) {
-      console.error("Save user error:", error)
+      //console.error("Save user error:", error)
       toast({
         title: "فشل الحفظ",
         description: error.message || "حدث خطأ أثناء حفظ المسؤول.",

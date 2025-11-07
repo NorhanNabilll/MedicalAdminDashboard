@@ -43,7 +43,7 @@ import { withPermission } from "@/components/with-permission";
         throw new Error(result.error || "فشل في تحميل الإعدادات")
       }
     } catch (error) {
-      console.error("[] Error fetching shipping fee:", error)
+      //console.error("[] Error fetching shipping fee:", error)
       toast({
         title: "خطأ",
         description: "فشل في تحميل رسوم الشحن",
@@ -77,7 +77,7 @@ import { withPermission } from "@/components/with-permission";
 
     try {
       setLoading(true)
-      console.log("[] Updating shipping fee to:", feeValue)
+      //console.log("[] Updating shipping fee to:", feeValue)
 
       const result = await updateSetting(shippingFeeId, shippingFee)
 
@@ -90,7 +90,7 @@ import { withPermission } from "@/components/with-permission";
         throw new Error(result.error || "فشل في تحديث الإعدادات")
       }
     } catch (error) {
-      console.error("[] Error updating shipping fee:", error)
+      //console.error("[] Error updating shipping fee:", error)
       toast({
         title: "خطأ",
         description: "فشل في تحديث رسوم الشحن",

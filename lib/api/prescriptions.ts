@@ -88,7 +88,7 @@ export async function fetchPrescriptions(params?: {
 
     const url = `/v1/Prescriptions/all${queryParams.toString() ? `?${queryParams.toString()}` : ""}`
 
-    console.log("[] Fetching prescriptions with URL:", url)
+    //console.log("[] Fetching prescriptions with URL:", url)
 
     const response = await apiClient.get<ApiResponse<PrescriptionsData>>(url)
 
@@ -98,14 +98,14 @@ export async function fetchPrescriptions(params?: {
 
     return response.data.data
   } catch (error) {
-    console.error("[] Fetch prescriptions error:", error)
+    //console.error("[] Fetch prescriptions error:", error)
     throw new Error("فشل في جلب بيانات الوصفات")
   }
 }
 
 export async function updatePrescriptionStatus(prescriptionId: number, newStatus: number): Promise<Prescription> {
   try {
-    console.log("[] Updating prescription status:", prescriptionId, "to", newStatus)
+    //console.log("[] Updating prescription status:", prescriptionId, "to", newStatus)
 
     const response = await apiClient.put<ApiResponse<Prescription>>(
       `/v1/Prescriptions/${prescriptionId}/status?Status=${newStatus}`,
@@ -117,7 +117,7 @@ export async function updatePrescriptionStatus(prescriptionId: number, newStatus
 
     return response.data.data
   } catch (error) {
-    console.error("[] Update prescription status error:", error)
+    //console.error("[] Update prescription status error:", error)
     throw new Error("فشل في تحديث حالة الوصفة")
   }
 }

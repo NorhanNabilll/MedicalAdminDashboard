@@ -153,7 +153,7 @@ export default function ProfilePage() {
         throw new Error(response.data.message || "فشل تحديث البيانات")
       }
     } catch (error: any) {
-      console.error("[] Profile update error:", error)
+      //console.error("[] Profile update error:", error)
       toast({
         title: "خطأ",
         description: error.response?.data?.message || "فشل تحديث بيانات الملف الشخصي",
@@ -234,9 +234,9 @@ export default function ProfilePage() {
         });
 
         try {
-            console.log("Attempting to log out from all other devices...");
+            //console.log("Attempting to log out from all other devices...");
             await logoutFromAllDevices();
-            console.log("Successfully logged out from all other devices.");
+            //console.log("Successfully logged out from all other devices.");
             
             // ✅ أبقِ على هذه الرسالة فقط
             toast({
@@ -249,7 +249,7 @@ export default function ProfilePage() {
             }, 3000);
 
         } catch (e) {
-            console.error("Could not log out from all devices, but this will not affect the user.", e);
+            //console.error("Could not log out from all devices, but this will not affect the user.", e);
             // في حالة فشل تسجيل الخروج من كل الأجهزة، لا يزال يجب تسجيل الخروج من الجهاز الحالي
             // لذا، نعرض نفس الرسالة ونكمل
             toast({
@@ -267,7 +267,7 @@ export default function ProfilePage() {
         throw new Error(response.data.message || "فشل تغيير كلمة المرور")
       }
     } catch (error: any) {
-      console.error("[] Password change error:", error)
+      //console.error("[] Password change error:", error)
       toast({
         title: "خطأ",
         description: error.response?.data?.message || "فشل تغيير كلمة المرور",

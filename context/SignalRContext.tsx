@@ -55,7 +55,7 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const refreshToken = getRefreshToken();
       
       if (!token || !refreshToken) {
-        console.log(' No tokens - skipping SignalR');
+        //console.log(' No tokens - skipping SignalR');
         hasAttemptedRef.current = true;
         return;
       }
@@ -63,7 +63,7 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // ✅ فحص الـ permissions
       const adminData = localStorage.getItem('admin');
       if (!adminData) {
-        console.log('ℹ️ No admin data');
+        //console.log('ℹ️ No admin data');
         hasAttemptedRef.current = true;
         return;
       }
@@ -71,12 +71,12 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({ child
       try {
         const admin = JSON.parse(adminData);
         if (!admin.permissions?.includes('Orders.View')) {
-          console.log('ℹ️ No Orders.View permission');
+          //console.log('ℹ️ No Orders.View permission');
           hasAttemptedRef.current = true;
           return;
         }
       } catch (error) {
-        console.error('Error parsing admin:', error);
+        //console.error('Error parsing admin:', error);
         hasAttemptedRef.current = true;
         return;
       }
@@ -94,7 +94,7 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({ child
       return;
     }
 
-    console.log('🔌 Starting SignalR...');
+    //console.log('🔌 Starting SignalR...');
 
     const connection = new signalR.HubConnectionBuilder()
       .withUrl(`${process.env.NEXT_PUBLIC_API_HOST}/notificationHub`, {
@@ -108,27 +108,27 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({ child
       .build();
 
     connection.onreconnecting(() => {
-      console.log('🔄 Reconnecting...');
+      //console.log('🔄 Reconnecting...');
       setIsConnected(false);
     });
 
     connection.onreconnected(() => {
-      console.log('✅ Reconnected');
+      //console.log('✅ Reconnected');
       setIsConnected(true);
     });
 
     connection.onclose((error) => {
-      console.log('🔌 Connection closed');
+      //console.log('🔌 Connection closed');
       setIsConnected(false);
       
       // ✅ لو 401، استنى tokenRefreshed
       if (error?.message?.includes('401')) {
-        console.log('🔒 Waiting for token refresh...');
+        //console.log('🔒 Waiting for token refresh...');
       }
     });
 
     connection.on('ReceiveOrderNotification', (notification: OrderNotification) => {
-      console.log('🔔 Notification:', notification);
+      //console.log('🔔 Notification:', notification);
       setLatestNotification(notification);
 
       try {
@@ -149,11 +149,11 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({ child
     // ✅ محاولة الاتصال
     connection.start()
       .then(() => {
-        console.log('✅ SignalR Connected');
+        //console.log('✅ SignalR Connected');
         setIsConnected(true);
       })
       .catch((err) => {
-        console.error('❌ Connection failed:', err.message);
+        //console.error('❌ Connection failed:', err.message);
         setIsConnected(false);
       });
   };
@@ -161,7 +161,7 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // ✅ لما الـ token يتحدث، اعمل reconnect
   useEffect(() => {
     const handleTokenRefresh = async () => {
-      console.log('🔄 Token refreshed');
+      //console.log('🔄 Token refreshed');
       
       const connection = connectionRef.current;
       if (!connection) return;
@@ -171,10 +171,10 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({ child
           await connection.stop();
           await new Promise(resolve => setTimeout(resolve, 100));
           await connection.start();
-          console.log('✅ Reconnected with new token');
+          //console.log('✅ Reconnected with new token');
           setIsConnected(true);
         } catch (err) {
-          console.error('❌ Reconnect failed:', err);
+          //console.error('❌ Reconnect failed:', err);
         }
       }
     };

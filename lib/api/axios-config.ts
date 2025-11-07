@@ -33,13 +33,13 @@ const processQueue = (error: any, token: string | null = null) => {
 apiClient.interceptors.request.use(
   (config) => {
     const timestamp = new Date().toISOString()
-    console.log(`[ API Request] ${timestamp}`, {
-      method: config.method?.toUpperCase(),
-      endpoint: config.url,
-      fullURL: `${config.baseURL}${config.url}`,
-      params: config.params,
-      data: config.data,
-    })
+    // console.log(`[ API Request] ${timestamp}`, {
+    //   method: config.method?.toUpperCase(),
+    //   endpoint: config.url,
+    //   fullURL: `${config.baseURL}${config.url}`,
+    //   params: config.params,
+    //   data: config.data,
+    // })
 
     const accessToken = getAccessToken()
     if (accessToken) {
@@ -49,7 +49,7 @@ apiClient.interceptors.request.use(
     return config
   },
   (error) => {
-    console.error("[ API Request Error]", error)
+    // console.error("[ API Request Error]", error)
     return Promise.reject(error)
   },
 )
@@ -57,12 +57,12 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     const timestamp = new Date().toISOString()
-    console.log(`[ API Response] ${timestamp}`, {
-      status: response.status,
-      statusText: response.statusText,
-      endpoint: response.config.url,
-      data: response.data,
-    })
+    // console.log(`[ API Response] ${timestamp}`, {
+    //   status: response.status,
+    //   statusText: response.statusText,
+    //   endpoint: response.config.url,
+    //   data: response.data,
+    // })
     return response
   },
   (error: AxiosError<ApiResponse>) => {
@@ -112,7 +112,7 @@ apiClient.interceptors.response.use(
                 refreshToken,
               })
               .then((response) => {
-                console.log("[ Token Refffffffffffffffreshed Successfully]")
+                // console.log("[ Token Refffffffffffffffreshed Successfully]")
                 // تم تعديل هذا السطر
                 const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data
 
@@ -131,7 +131,7 @@ apiClient.interceptors.response.use(
                 return apiClient(error.config)
               })
               .catch((refreshError) => {
-                console.error("[ Token Refresh Error]", refreshError)
+                // console.error("[ Token Refresh Error]", refreshError)
                 clearTokens()
                 processQueue(refreshError, null)
                 window.dispatchEvent(new CustomEvent('unauthorized')) //window.location.href = "/login"
@@ -158,13 +158,13 @@ apiClient.interceptors.response.use(
         }
       }
 
-      console.error(`[ API Error ${status}]`, {
-        ...errorDetails,
-        status,
-        statusText: error.response.statusText,
-        apiMessage,
-        responseData: error.response.data,
-      })
+      // console.error(`[ API Error ${status}]`, {
+      //   ...errorDetails,
+      //   status,
+      //   statusText: error.response.statusText,
+      //   apiMessage,
+      //   responseData: error.response.data,
+      // })
 
       let userMessage = apiMessage || "An error occurred"
 
@@ -209,15 +209,15 @@ apiClient.interceptors.response.use(
       error.message = userMessage
     } else if (error.request) {
       // Request made but no response received (network error, timeout, etc.)
-      console.error("[ API Network Error]", {
-        ...errorDetails,
-        code: error.code,
-        requestDetails: {
-          url: error.config?.url,
-          method: error.config?.method,
-          timeout: error.config?.timeout,
-        },
-      })
+      // console.error("[ API Network Error]", {
+      //   ...errorDetails,
+      //   code: error.code,
+      //   requestDetails: {
+      //     url: error.config?.url,
+      //     method: error.config?.method,
+      //     timeout: error.config?.timeout,
+      //   },
+      // })
 
       if (error.code === "ECONNABORTED") {
         error.message = "Request timeout. Please check your internet connection and try again."
@@ -228,10 +228,10 @@ apiClient.interceptors.response.use(
       }
     } else {
       // Something else happened while setting up the request
-      console.error("[ API Setup Error]", {
-        ...errorDetails,
-        errorType: "Request Setup Error",
-      })
+      // console.error("[ API Setup Error]", {
+      //   ...errorDetails,
+      //   errorType: "Request Setup Error",
+      // })
       error.message = "An unexpected error occurred. Please try again."
     }
 

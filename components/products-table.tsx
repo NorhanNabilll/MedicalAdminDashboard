@@ -207,7 +207,7 @@ export default function ProductsTable() {
           const blob = await response.blob()
           imageFileToSubmit = new File([blob], "product-image.jpg", { type: blob.type })
         } catch (error) {
-          console.error("Failed to convert image URL to File:", error)
+          //console.error("Failed to convert image URL to File:", error)
         }
       }
 

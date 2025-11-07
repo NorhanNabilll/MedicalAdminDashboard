@@ -69,7 +69,7 @@ export async function verifyMfa(tempToken: string, code: string) {
         const permissions = decodedToken.Permission || [];
         localStorage.setItem('admin', JSON.stringify({ ...admin, permissions })); // <-- حفظ بيانات الأدمن
       } catch (e) {
-        console.error("Error decoding token:", e);
+        //console.error("Error decoding token:", e);
         localStorage.setItem('admin', JSON.stringify({ ...admin, permissions: [] }));
       }
       
@@ -96,7 +96,7 @@ export const logout = async () => {
       await apiClient.post("/v1/Auth/logout", { refreshToken });
     }
   } catch (error) {
-    console.error("Logout API call failed, but clearing tokens anyway.", error);
+    //console.error("Logout API call failed, but clearing tokens anyway.", error);
   } finally {
     // Always clear tokens from localStorage, even if the API call fails
     clearTokens();
@@ -132,11 +132,11 @@ export async function logoutFromAllDevices() {
       throw new Error(response.data.message || "فشل تسجيل الخروج من جميع الأجهزة.");
     }
     
-    console.log("Successfully logged out from all devices.");
+    //console.log("Successfully logged out from all devices.");
     return response.data;
 
   } catch (error) {
-    console.error("Logout from all devices failed:", error);
+    //console.error("Logout from all devices failed:", error);
     // حتى لو فشل هذا الطلب، يجب أن نكمل عملية تسجيل الخروج الحالية
     throw error;
   }finally {

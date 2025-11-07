@@ -98,7 +98,7 @@ export async function fetchUsers(
 
     return response.data.data
   } catch (error) {
-    console.error("[] Fetch users error:", error)
+    //console.error("[] Fetch users error:", error)
     throw new Error("فشل في جلب بيانات المستخدمين")
   }
 }
@@ -112,7 +112,7 @@ export async function createUser(userData: {
   customerType: string
 }): Promise<User> {
   try {
-    console.log("[] Creating user with data:", userData)
+    //console.log("[] Creating user with data:", userData)
     const response = await apiClient.post<ApiResponse<User>>("/v1/User", userData)
 
     if (!response.data.success) {
@@ -121,7 +121,7 @@ export async function createUser(userData: {
 
     return response.data.data
   } catch (error) {
-    console.error("[] Create user error:", error)
+    //console.error("[] Create user error:", error)
     throw new Error("فشل في إضافة المستخدم")
   }
 }
@@ -138,7 +138,7 @@ export async function updateUser(
   },
 ): Promise<User> {
   try {
-    console.log("[] Updating user:", userId, "with data:", userData);
+    //console.log("[] Updating user:", userId, "with data:", userData);
 
     // 1. Create a new FormData object
     const formData = new FormData();
@@ -165,7 +165,7 @@ export async function updateUser(
 
     return response.data.data;
   } catch (error) {
-    console.error("[] Update user error:", error);
+    //console.error("[] Update user error:", error);
     // Re-throw the original error to be handled by the component
     throw error;
   }
@@ -179,7 +179,7 @@ export async function deleteUser(userId: string): Promise<void> {
       throw new Error(response.data.message || "فشل في حذف المستخدم")
     }
   } catch (error) {
-    console.error("[] Delete user error:", error)
+    //console.error("[] Delete user error:", error)
     throw new Error("فشل في حذف المستخدم")
   }
 }

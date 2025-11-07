@@ -58,7 +58,7 @@ function UserProfile() {
       try {
         setAdmin(JSON.parse(adminData))
       } catch (error) {
-        console.error("Failed to parse admin data:", error)
+        //console.error("Failed to parse admin data:", error)
       }
     }
   }, [])

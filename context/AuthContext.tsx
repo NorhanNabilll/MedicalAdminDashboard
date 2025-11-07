@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // ✅ Timeout للـ loading (5 ثوانٍ max)
     const timeoutId = setTimeout(() => {
       if (isLoading) {
-        console.warn('⚠️ Loading timeout reached');
+        //console.warn('⚠️ Loading timeout reached');
         setLoadingTimeout(true);
         setIsLoading(false);
       }
@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setAdmin(JSON.parse(adminDataString));
       }
     } catch (error) {
-      console.error("Failed to parse admin data from localStorage", error);
+      //console.error("Failed to parse admin data from localStorage", error);
     } finally {
       setIsLoading(false);
       clearTimeout(timeoutId); // ✅ إلغاء الـ timeout

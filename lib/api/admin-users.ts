@@ -67,7 +67,7 @@ export async function fetchAdminUsers(params?: {
     if (response.success && response.data) {
       return response.data
     } else {
-      console.log("[] Fetch admin users - no data returned, using default")
+      //console.log("[] Fetch admin users - no data returned, using default")
       return {
         items: [],
         pagination: {
@@ -81,7 +81,7 @@ export async function fetchAdminUsers(params?: {
       }
     }
   } catch (error: any) {
-    console.error("[] Fetch admin users error:", error.message)
+    //console.error("[] Fetch admin users error:", error.message)
     throw error
   }
 }
@@ -98,7 +98,7 @@ export async function createAdminUser(data: CreateAdminUserRequest): Promise<Adm
       throw new Error(response.error)
     }
   } catch (error: any) {
-    console.error("[] Create admin user error:", error.message)
+    //console.error("[] Create admin user error:", error.message)
     throw error
   }
 }
@@ -116,7 +116,7 @@ export async function updateAdminUser(id: string, data: UpdateAdminUserRequest):
       throw new Error(response.error)
     }
   } catch (error: any) {
-    console.error("[] Update admin user error:", error.message)
+    //console.error("[] Update admin user error:", error.message)
     throw error
   }
 }
@@ -132,7 +132,7 @@ export async function deleteAdminUser(id: string): Promise<void> {
       throw new Error(response.error)
     }
   } catch (error: any) {
-    console.error("[] Delete admin user error:", error.message)
+    //console.error("[] Delete admin user error:", error.message)
     throw error
   }
 }
@@ -150,7 +150,7 @@ export async function getAdminUserById(id: string): Promise<AdminUser> {
       throw new Error(response.error)
     }
   } catch (error: any) {
-    console.error("[] Get admin user error:", error.message)
+    //console.error("[] Get admin user error:", error.message)
     throw error
   }
 }

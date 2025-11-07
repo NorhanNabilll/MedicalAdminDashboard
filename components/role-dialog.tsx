@@ -92,10 +92,10 @@ export default function RoleDialog({ open, onOpenChange, role, onSave }: RoleDia
           // Extract permission IDs from the fetched role
           const permissionIds = roleData.permissions.map((p) => p.id)
           setSelectedPermissionIds(permissionIds)
-          console.log("[] Loaded permissions for role:", permissionIds)
+          //console.log("[] Loaded permissions for role:", permissionIds)
         })
         .catch((error) => {
-          console.error("[] Failed to fetch role permissions:", error.message)
+          //console.error("[] Failed to fetch role permissions:", error.message)
           toast({
             title: "خطأ",
             description: "فشل في تحميل صلاحيات الدور.",

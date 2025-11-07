@@ -10,10 +10,10 @@ export async function getUsers() {
   const result = await api.get("/v1/User")
 
   if (result.success) {
-    console.log("Users fetched:", result.data)
+    //console.log("Users fetched:", result.data)
     return result.data
   } else {
-    console.error("Failed to fetch users:", result.error)
+    //console.error("Failed to fetch users:", result.error)
     // Show toast notification with result.error
     return null
   }
@@ -24,11 +24,11 @@ export async function createUser(userData: any) {
   const result = await api.post("/v1/User", userData)
 
   if (result.success) {
-    console.log("User created:", result.data)
+    //console.log("User created:", result.data)
     // Show success toast with result.message
     return result.data
   } else {
-    console.error("Failed to create user:", result.error)
+    //console.error("Failed to create user:", result.error)
     // Show error toast with result.error
     return null
   }

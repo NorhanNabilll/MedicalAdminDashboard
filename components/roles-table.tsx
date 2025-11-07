@@ -52,7 +52,7 @@ export default function RolesTable() {
       mutate()
       setDeleteConfirm({ open: false, roleId: null })
     } catch (error: any) {
-      console.error("Delete role error:", error)
+      //console.error("Delete role error:", error)
       toast({
         title: "فشل الحذف",
         description: error.message || "حدث خطأ أثناء حذف الدور.",

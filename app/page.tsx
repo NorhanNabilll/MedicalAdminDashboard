@@ -40,7 +40,7 @@ export default function HomePage() {
   useEffect(() => {
     // تسجيل دالة "callback" ليتم استدعاؤها عند وصول إشعار
     registerOrderCallback(() => {
-      console.log('New order detected - refreshing statistics...');
+      //console.log('New order detected - refreshing statistics...');
       // عند وصول إشعار، قم بإعادة جلب بيانات الإحصائيات
       mutateStatistics();
     });
@@ -48,7 +48,7 @@ export default function HomePage() {
   // ✅ الخطوة 1 (الحل B): استماع عام لتحديث الإحصائيات عند أي إشعار SignalR
 useEffect(() => {
   const handleOrdersUpdated = (e: Event) => {
-    console.log('📢 ordersUpdated event received - refreshing statistics...');
+    //console.log('📢 ordersUpdated event received - refreshing statistics...');
     mutateStatistics(); // يعيد جلب الإحصائيات من الـ API
   };
 

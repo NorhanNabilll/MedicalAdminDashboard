@@ -12,7 +12,7 @@ export async function getStatistics(): Promise<StatisticsData> {
       throw new Error(response.error || "Failed to fetch statistics")
     }
   } catch (error: any) {
-    console.error("[API] Get statistics error:", error.message)
+    //console.error("[API] Get statistics error:", error.message)
     throw error // Re-throw the error to be caught by useSWR
   }
 }

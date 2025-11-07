@@ -37,7 +37,7 @@ export async function fetchPermissions(): Promise<PermissionGroup[]> {
     const response = await api.get<ApiResponse<PermissionGroup[]>>("/v1/Permissions/grouped")
     return response.data.data || []
   } catch (error: any) {
-    console.error("[] Fetch permissions error:", error.message)
+    //console.error("[] Fetch permissions error:", error.message)
     // Return empty array instead of throwing to allow UI to render
     return []
   }
@@ -49,7 +49,7 @@ export async function fetchRoles(): Promise<Role[]> {
     const response = await api.get<ApiResponse<Role[]>>("/v1/Roles")
     return response.data || []
   } catch (error: any) {
-    console.error("[] Fetch roles error:", error.message)
+    //console.error("[] Fetch roles error:", error.message)
     throw error
   }
 }
@@ -61,7 +61,7 @@ export async function createRoleWithName(name: string) {
     const response = await api.post<Role>("/v1/Roles", { name })
     return response // <-- التعديل هنا: نرجع الرد الكامل
   } catch (error: any) {
-    console.error("[] Create role error:", error.message)
+    //console.error("[] Create role error:", error.message)
     throw error
   }
 }
@@ -70,7 +70,7 @@ export async function assignPermissionsToRole(roleId: string, permissionIds: num
   try {
     await api.post(`/v1/Roles/${roleId}/permissions`, { permissionIds })
   } catch (error: any) {
-    console.error("[] Assign permissions error:", error.message)
+    //console.error("[] Assign permissions error:", error.message)
     throw error
   }
 }
@@ -80,7 +80,7 @@ export async function deleteRole(id: string): Promise<void> {
   try {
     await api.delete(`/v1/Roles/${id}`)
   } catch (error: any) {
-    console.error("[] Delete role error:", error.message)
+    //console.error("[] Delete role error:", error.message)
     throw error
   }
 }
@@ -91,7 +91,7 @@ export async function getRoleById(id: string): Promise<RoleWithPermissions> {
     const response = await api.get<ApiResponse<RoleWithPermissions>>(`/v1/Roles/${id}`)
     return response.data!
   } catch (error: any) {
-    console.error("[] Get role error:", error.message)
+    //console.error("[] Get role error:", error.message)
     throw error
   }
 }
@@ -100,7 +100,7 @@ export async function updateRoleWithPermissions(roleId: string, name: string, pe
   try {
     await api.put(`/v1/Roles/${roleId}/update-with-permissions`, { name, permissionIds })
   } catch (error: any) {
-    console.error("[] Update role with permissions error:", error.message)
+    //console.error("[] Update role with permissions error:", error.message)
     throw error
   }
 }

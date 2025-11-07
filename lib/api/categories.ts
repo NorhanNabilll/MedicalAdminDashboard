@@ -40,32 +40,32 @@ export async function getCategories(params?: {
   pageSize?: number
   searchTerm?: string
 }): Promise<CategoryResponse> {
-  console.log("[] Fetching categories with params:", params)
+  //console.log("[] Fetching categories with params:", params)
   const response = await apiClient.get<CategoryResponse>("/v1/Category", { params })
-  console.log("[] Categories response:", response.data)
+  //console.log("[] Categories response:", response.data)
   return response.data
 }
 
 // Create a new category
 export async function createCategory(data: CreateCategoryRequest): Promise<CategoryResponse> {
-  console.log("[] Creating category:", data)
+  //console.log("[] Creating category:", data)
   const response = await apiClient.post<CategoryResponse>("/v1/Category", data)
-  console.log("[] Create category response:", response.data)
+  //console.log("[] Create category response:", response.data)
   return response.data
 }
 
 // Update an existing category
 export async function updateCategory(id: number, data: UpdateCategoryRequest): Promise<CategoryResponse> {
-  console.log("[] Updating category:", id, data)
+  //console.log("[] Updating category:", id, data)
   const response = await apiClient.put<CategoryResponse>(`/v1/Category/${id}`, data)
-  console.log("[] Update category response:", response.data)
+  //console.log("[] Update category response:", response.data)
   return response.data
 }
 
 // Delete a category
 export async function deleteCategory(id: number): Promise<CategoryResponse> {
-  console.log("[] Deleting category:", id)
+  //console.log("[] Deleting category:", id)
   const response = await apiClient.delete<CategoryResponse>(`/v1/Category/${id}`)
-  console.log("[] Delete category response:", response.data)
+  //console.log("[] Delete category response:", response.data)
   return response.data
 }

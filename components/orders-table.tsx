@@ -118,13 +118,13 @@ export default function OrdersTable({ defaultStatus = "all" }: { defaultStatus?:
 
  /* useEffect(() => {
     registerOrderCallback(() => {
-      console.log('Order created - refreshing table...');
+      //console.log('Order created - refreshing table...');
       mutate();
     });
   }, [mutate, registerOrderCallback]);*/
   useEffect(() => {
   const handleOrdersUpdated = (e: Event) => {
-    console.log('📦 ordersUpdated event received - refreshing orders table...');
+    //console.log('📦 ordersUpdated event received - refreshing orders table...');
     mutate(); // يعيد تحميل الطلبات من الـ API
   };
 
