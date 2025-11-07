@@ -195,7 +195,7 @@ export default function LoginForm() {
               {/* Login Button */}
               <Button
                 type="submit"
-                disabled={isLoading || !email || !password }//|| !recaptchaToken}
+                disabled={isLoading || !email || !password || !recaptchaToken}
                 className="w-full py-2 px-4 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg transition duration-200 disabled:opacity-50"
               >
                 {isLoading ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : "تسجيل الدخول"}

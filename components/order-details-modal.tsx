@@ -252,300 +252,280 @@ export function OrderDetailsModal({ order, open, onOpenChange, onUpdate }: Order
   }
 
   const handlePrint = () => {
-    const printWindow = window.open("", "", "width=800,height=600")
-    if (!printWindow) {
-      toast({
-        title: "خطأ",
-        description: "لم يتمكن من فتح نافذة الطباعة. تأكد من تعطيل مانع النوافذ المنبثقة",
-        variant: "destructive",
-      })
-      return
-    }
+    if (!editableOrder) return
+
+    const printWindow = document.createElement("iframe")
+    printWindow.style.position = "fixed"
+    printWindow.style.top = "-9999px"
+    printWindow.style.left = "-9999px"
+    printWindow.style.width = "1px"
+    printWindow.style.height = "1px"
+    printWindow.style.border = "none"
+    document.body.appendChild(printWindow)
 
     const htmlContent = `
-<!DOCTYPE html>
-<html dir="rtl" lang="ar">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>طباعة الوصل - ${editableOrder.orderNumber}</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+      <!DOCTYPE html>
+      <html dir="rtl" lang="ar">
+      <head>
+        <meta charset="UTF-8">
+        <title>فاتورة الطلب</title>
+        <style>
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
 
-    html, body {
-      margin: 0 !important;
-      padding: 0 !important;
-      width: 100%;
-      height: 100%;
-      background: white;
-    }
+          html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background: white;
+          }
 
-    @page {
-      size: A4;
-      margin: 8mm 8mm 8mm 8mm;
-    }
+          @page {
+            size: A4;
+            margin: 5mm;
+          }
 
-    @media print {
-      body {
-        margin: 0;
-        padding: 0;
-      }
-    }
+          @media print {
+            body {
+              margin: 0;
+              padding: 0;
+              width: 100%;
+            }
 
-    body {
-      font-family: Arial, sans-serif;
-      color: #333;
-      background: white;
-      padding: 0;
-      margin: 0;
-    }
+            .print-content {
+              width: 100%;
+              padding: 0;
+              margin: 0;
+              page-break-after: avoid;
+              page-break-inside: avoid;
+            }
+          }
 
-    .receipt {
-      max-width: 100%;
-      width: 100%;
-      background: white;
-      padding: 0;
-      margin: 0;
-      page-break-after: avoid;
-    }
+          body {
+            font-family: 'Arial', sans-serif;
+            background: white;
+            color: black;
+            font-size: 12px;
+            line-height: 1.3;
+            width: 100%;
+            padding: 0;
+            margin: 0;
+          }
 
-    .header {
-      text-align: center;
-      margin-bottom: 10px;
-      padding-bottom: 8px;
-      border-bottom: 2px solid #000;
-    }
+          .print-content {
+            width: 100%;
+            background: white;
+            padding: 0;
+            margin: 0;
+          }
 
-    .header h1 {
-      font-size: 16px;
-      margin: 0 0 4px 0;
-      font-weight: bold;
-    }
+          .header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding: 8px 0;
+            margin-bottom: 6px;
+          }
 
-    .header p {
-      font-size: 11px;
-      margin: 2px 0;
-    }
+          .header h1 {
+            font-size: 14px;
+            margin: 0 0 3px 0;
+            font-weight: bold;
+          }
 
-    .section {
-      margin-bottom: 8px;
-    }
+          .header p {
+            font-size: 10px;
+            margin: 1px 0;
+          }
 
-    .section-title {
-      font-size: 11px;
-      font-weight: bold;
-      margin: 0 0 4px 0;
-      padding-bottom: 2px;
-      border-bottom: 1px solid #ddd;
-    }
+          .section {
+            margin-bottom: 6px;
+            padding: 0 8px;
+          }
 
-    .info-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 4px;
-      font-size: 9px;
-    }
+          .section-title {
+            font-size: 10px;
+            font-weight: bold;
+            margin-bottom: 3px;
+            padding-bottom: 2px;
+            border-bottom: 1px solid #ddd;
+          }
 
-    .info-item {
-      text-align: right;
-    }
+          .patient-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 4px;
+            font-size: 9px;
+            text-align: right;
+          }
 
-    .info-label {
-      display: block;
-      color: #666;
-      font-weight: bold;
-      font-size: 8px;
-      margin-bottom: 1px;
-    }
+          .patient-info-item {
+            text-align: right;
+          }
 
-    .info-value {
-      display: block;
-      color: #000;
-      font-weight: bold;
-      font-size: 10px;
-    }
+          .patient-info-label {
+            color: #666;
+            font-size: 8px;
+            margin-bottom: 1px;
+          }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 9px;
-      margin: 4px 0;
-    }
+          .patient-info-value {
+            font-weight: bold;
+            font-size: 9px;
+          }
 
-    table th {
-      background: #f5f5f5;
-      border: 1px solid #999;
-      padding: 3px;
-      text-align: right;
-      font-weight: bold;
-    }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9px;
+            margin-bottom: 4px;
+          }
 
-    table td {
-      border: 1px solid #999;
-      padding: 3px;
-      text-align: right;
-    }
+          table th,
+          table td {
+            border: 1px solid #999;
+            padding: 3px;
+            text-align: right;
+          }
 
-    table tbody tr:nth-child(even) {
-      background: #fafafa;
-    }
+          table th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+          }
 
-    .summary-box {
-      border: 1px solid #000;
-      padding: 6px;
-      background: #f9f9f9;
-      margin-top: 6px;
-    }
+          table tr:nth-child(even) {
+            background-color: #fafafa;
+          }
 
-    .summary-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 2px 0;
-      font-size: 9px;
-      text-align: right;
-    }
+          .summary {
+            border: 1px solid #000;
+            padding: 6px 8px;
+            margin: 6px 8px;
+            background-color: #f9f9f9;
+            font-size: 9px;
+            text-align: right;
+          }
 
-    .summary-row.total {
-      font-size: 11px;
-      font-weight: bold;
-      border-top: 2px solid #000;
-      padding-top: 4px;
-      margin-top: 2px;
-    }
+          .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding-bottom: 2px;
+          }
 
-    .badge {
-      display: inline-block;
-      padding: 2px 4px;
-      border-radius: 2px;
-      font-size: 8px;
-      font-weight: bold;
-      margin-top: 2px;
-    }
+          .summary-row.total {
+            padding-top: 4px;
+            border-top: 2px solid #000;
+            font-size: 10px;
+            font-weight: bold;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="print-content">
+          <div class="header">
+            <h1>فاتورة طلب</h1>
+            <p>رقم الطلب: ${editableOrder.orderNumber}</p>
+            <p>تاريخ الطلب: ${formatDateArabic(editableOrder.orderDate)}</p>
+          </div>
 
-    .badge-pending { background: #dbeafe; color: #1e40af; }
-    .badge-shipped { background: #fef3c7; color: #b45309; }
-    .badge-delivered { background: #d1fae5; color: #065f46; }
-    .badge-cancelled { background: #fee2e2; color: #991b1b; }
-  </style>
-</head>
-<body>
-  <div class="receipt">
-    <div class="header">
-      <h1>فاتورة طلب</h1>
-      <p>رقم الطلب: ${editableOrder.orderNumber}</p>
-      <p>تاريخ الطلب: ${formatDateArabic(editableOrder.orderDate)}</p>
-      <span class="badge badge-${
-        editableOrder.status === 0
-          ? "pending"
-          : editableOrder.status === 1
-            ? "shipped"
-            : editableOrder.status === 2
-              ? "delivered"
-              : "cancelled"
-      }">
-        ${
-          editableOrder.status === 0
-            ? "تم الطلب"
-            : editableOrder.status === 1
-              ? "تم الشحن"
-              : editableOrder.status === 2
-                ? "تم الاستلام"
-                : "تم الإلغاء"
-        }
-      </span>
-    </div>
+          <div class="section">
+            <div class="section-title">معلومات المريض</div>
+            <div class="patient-info">
+              <div class="patient-info-item">
+                <div class="patient-info-label">اسم المريض:</div>
+                <div class="patient-info-value">${editableOrder.shippingInfo.fullName}</div>
+              </div>
+              <div class="patient-info-item">
+                <div class="patient-info-label">رقم الهاتف:</div>
+                <div class="patient-info-value" dir="ltr">${editableOrder.shippingInfo.phoneNumber}</div>
+              </div>
+              <div class="patient-info-item">
+                <div class="patient-info-label">العنوان:</div>
+                <div class="patient-info-value">${editableOrder.shippingInfo.address}</div>
+              </div>
+            </div>
+          </div>
 
-    <div class="section">
-      <div class="section-title">معلومات المريض</div>
-      <div class="info-grid">
-        <div class="info-item">
-          <span class="info-label">اسم المريض:</span>
-          <span class="info-value">${editableOrder.shippingInfo.fullName}</span>
+          <div class="section">
+            <div class="section-title">المنتجات المطلوبة</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>المنتج</th>
+                  <th>الكمية</th>
+                  <th>السعر</th>
+                  <th>الإجمالي</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${editableOrder.items
+                  .map(
+                    (item, index) => `
+                  <tr>
+                    <td>${index + 1}</td>
+                    <td>${item.productName}</td>
+                    <td>${item.quantity}</td>
+                    <td>${item.unitPrice} د.ع</td>
+                    <td>${item.subtotal} د.ع</td>
+                  </tr>
+                `,
+                  )
+                  .join("")}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="summary">
+            <div class="summary-row">
+              <span>${editableOrder.summary.subtotal} د.ع</span>
+              <span>المجموع الفرعي:</span>
+            </div>
+            <div class="summary-row">
+              <span>${editableOrder.summary.shippingFee} د.ع</span>
+              <span>أجور التوصيل:</span>
+            </div>
+            <div class="summary-row">
+              <span>${editableOrder.summary.totalItems}</span>
+              <span>إجمالي المنتجات:</span>
+            </div>
+            <div class="summary-row total">
+              <span>${editableOrder.summary.total} د.ع</span>
+              <span>المبلغ الإجمالي:</span>
+            </div>
+          </div>
         </div>
-        <div class="info-item">
-          <span class="info-label">رقم الهاتف:</span>
-          <span class="info-value" dir="ltr">${editableOrder.shippingInfo.phoneNumber}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">العنوان:</span>
-          <span class="info-value">${editableOrder.shippingInfo.address}</span>
-        </div>
-      </div>
-    </div>
 
-    <div class="section">
-      <div class="section-title">المنتجات المطلوبة</div>
-      <table>
-        <thead>
-          <tr>
-            <th style="width: 30px">#</th>
-            <th>المنتج</th>
-            <th style="width: 50px">الكمية</th>
-            <th style="width: 60px">السعر</th>
-            <th style="width: 70px">الإجمالي</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${editableOrder.items
-            .map(
-              (item, index) => `
-            <tr>
-              <td>${index + 1}</td>
-              <td>${item.productName}</td>
-              <td>${item.quantity}</td>
-              <td>${item.unitPrice} د.ع</td>
-              <td>${item.subtotal} د.ع</td>
-            </tr>
-          `,
-            )
-            .join("")}
-        </tbody>
-      </table>
-    </div>
-
-    <div class="summary-box">
-      <div class="summary-row">
-        <span>المجموع الفرعي:</span>
-        <span>${editableOrder.summary.subtotal} د.ع</span>
-      </div>
-      <div class="summary-row">
-        <span>أجور التوصيل:</span>
-        <span>${editableOrder.summary.shippingFee} د.ع</span>
-      </div>
-      <div class="summary-row">
-        <span>إجمالي المنتجات:</span>
-        <span>${editableOrder.summary.totalItems}</span>
-      </div>
-      <div class="summary-row total">
-        <span>المبلغ الإجمالي:</span>
-        <span>${editableOrder.summary.total} د.ع</span>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    window.print();
-    window.onafterprint = function() {
-      window.close();
-    };
-  </script>
-</body>
-</html>
+        <script>
+          window.onload = function() {
+            setTimeout(() => {
+              window.print();
+              setTimeout(() => {
+                window.parent.document.body.removeChild(window.frameElement);
+              }, 100);
+            }, 100);
+          };
+        </script>
+      </body>
+      </html>
     `
 
-    printWindow.document.write(htmlContent)
-    printWindow.document.close()
+    const doc = printWindow.contentDocument || printWindow.contentWindow?.document
+    if (doc) {
+      doc.open()
+      doc.write(htmlContent)
+      doc.close()
+    }
   }
 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
-          className="max-w-[98vw] max-h-[95vh] p-0 gap-0 flex flex-col overflow-hidden bg-gray-50 print:hidden"
+          className="max-w-[98vw] max-h-[95vh] p-0 gap-0 flex flex-col overflow-hidden bg-gray-50"
           dir="rtl"
         >
           <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 bg-white shrink-0">
@@ -647,7 +627,7 @@ export function OrderDetailsModal({ order, open, onOpenChange, onUpdate }: Order
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {editableOrder.items.map((item, index) => (
-                        <tr key={item.id}>
+                        <tr key={item.id} style={{ backgroundColor: index % 2 === 0 ? "#fafafa" : "white" }}>
                           <td className="px-3 py-2 whitespace-nowrap text-gray-600 text-right text-xs">{index + 1}</td>
                           <td className="px-3 py-2 whitespace-nowrap text-right">
                             <div className="font-semibold text-gray-900 text-xs">{item.productName}</div>
@@ -777,6 +757,20 @@ export function OrderDetailsModal({ order, open, onOpenChange, onUpdate }: Order
                 </div>
               </div>
             </div>
+          </div>
+
+          <div
+            ref={printRef}
+            style={{
+              display: "none",
+              width: "100%",
+              padding: "0",
+              margin: "0",
+              backgroundColor: "white",
+            }}
+            className="print-container"
+          >
+            {/* This section is now handled by the iframe method in handlePrint */}
           </div>
 
           <div className="flex items-center px-3 py-2 border-t border-gray-200 bg-gray-50 shrink-0 justify-end gap-2">
