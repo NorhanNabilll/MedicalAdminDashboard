@@ -467,24 +467,25 @@ export function OrderDetailsModal({ order, open, onOpenChange, onUpdate }: Order
             </table>
           </div>
 
-          <div class="summary">
-            <div class="summary-row">
-              <span>${editableOrder.summary.subtotal} د.ع</span>
-              <span>المجموع الفرعي:</span>
-            </div>
-            <div class="summary-row">
-              <span>${editableOrder.summary.shippingFee} د.ع</span>
-              <span>أجور التوصيل:</span>
-            </div>
-            <div class="summary-row">
-              <span>${editableOrder.summary.totalItems}</span>
-              <span>إجمالي المنتجات:</span>
-            </div>
-            <div class="summary-row total">
-              <span>${editableOrder.summary.total} د.ع</span>
-              <span>المبلغ الإجمالي:</span>
-            </div>
+          <div class="summary" style="direction: rtl; text-align: right;">
+          <div class="summary-row" style="display: flex; justify-content: space-between; flex-direction: row-reverse; margin: 4px 0;">
+            <span>${editableOrder.summary.subtotal} د.ع</span>
+            <span>المجموع الفرعي:</span>
           </div>
+          <div class="summary-row" style="display: flex; justify-content: space-between; flex-direction: row-reverse; margin: 4px 0;">
+            <span>${editableOrder.summary.shippingFee} د.ع</span>
+            <span>أجور التوصيل:</span>
+          </div>
+          <div class="summary-row" style="display: flex; justify-content: space-between; flex-direction: row-reverse; margin: 4px 0;">
+            <span>${editableOrder.summary.totalItems}</span>
+            <span>إجمالي المنتجات:</span>
+          </div>
+          <div class="summary-row total" style="display: flex; justify-content: space-between; flex-direction: row-reverse; margin: 4px 0; font-weight: bold;">
+            <span>${editableOrder.summary.total} د.ع</span>
+            <span>المبلغ الإجمالي:</span>
+          </div>
+        </div>
+
         </div>
       </body>
       </html>
