@@ -1,14 +1,14 @@
 import type { Metadata } from "next"
-import { Inter as FontSans } from "next/font/google" // استخدام خط نظيف واحترافي
+import { Inter as FontSans } from "next/font/google"
 import { cn } from "@/lib/utils"
 import { Toaster } from "@/components/ui/toaster"
-import { AuthProvider } from "@/context/AuthContext" // استيراد محفظة الصلاحيات
+import { AuthProvider } from "@/context/AuthContext"
 import { Suspense } from "react"
 import "./globals.css"
 import { SignalRProvider } from "@/context/SignalRContext"
 import NotificationDisplay from "@/components/NotificationDisplay"
+import { AuthNavigationHandler } from "@/components/AuthNavigationHandler" // ✅ أضف هذا السطر
 
-// تهيئة الخط الأساسي للتطبيق
 const fontSans = FontSans({
   subsets: ["latin"],
   variable: "--font-sans",
@@ -34,9 +34,10 @@ export default function RootLayout({
       >
         <AuthProvider>
           <SignalRProvider>
+            <AuthNavigationHandler /> {/* ✅ أضف هذا السطر */}
             <NotificationDisplay />
-          <Suspense fallback={null}>{children}</Suspense>
-          <Toaster  />
+            <Suspense fallback={null}>{children}</Suspense>
+            <Toaster />
           </SignalRProvider>
         </AuthProvider>
       </body>

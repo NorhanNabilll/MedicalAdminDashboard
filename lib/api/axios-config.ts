@@ -85,7 +85,7 @@ apiClient.interceptors.response.use(
       const originalRequest = error.config
       const url = originalRequest.url
 
-      if (
+     if (
         error.response?.status === 401 &&
         !originalRequest._retry &&
         url !== "/v1/AdminAuth/login" &&
@@ -134,12 +134,12 @@ apiClient.interceptors.response.use(
                 console.error("[ Token Refresh Error]", refreshError)
                 clearTokens()
                 processQueue(refreshError, null)
-                window.location.href = "/login"
+                window.dispatchEvent(new CustomEvent('unauthorized')) //window.location.href = "/login"
                 return Promise.reject(refreshError)
               })
           } else {
             clearTokens()
-            window.location.href = "/login"
+            window.dispatchEvent(new CustomEvent('unauthorized')) //window.location.href = "/login"
             return Promise.reject(error)
           }
         } else {
@@ -176,7 +176,7 @@ apiClient.interceptors.response.use(
           if (!url?.includes("/v1/AdminAuth/login") && !url?.includes("/v1/Auth/refresh")) {
             // Token is invalid, redirect to login
             clearTokens()
-            window.location.href = "/login"
+            window.dispatchEvent(new CustomEvent('unauthorized')) //window.location.href = "/login"
           }
           userMessage = apiMessage || "بيانات الدخول غير صحيحة."
           break

@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loadingTimeout, setLoadingTimeout] = useState(false); // ✅ timeout state
 
   // ✅ استخدم الـ Hook للـ Silent Token Refresh
-  useTokenRefresh();
+ // useTokenRefresh();
 
   useEffect(() => {
     // ✅ Timeout للـ loading (5 ثوانٍ max)

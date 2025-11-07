@@ -101,7 +101,7 @@ export const logout = async () => {
     // Always clear tokens from localStorage, even if the API call fails
     clearTokens();
     // Redirect to the login page
-    window.location.href = '/login';
+    window.dispatchEvent(new CustomEvent('unauthorized')) //window.location.href = "/login"
   }
 };
 
@@ -143,7 +143,7 @@ export async function logoutFromAllDevices() {
     // Always clear tokens from localStorage, even if the API call fails
     clearTokens();
     // Redirect to the login page
-    window.location.href = '/login';
+    window.dispatchEvent(new CustomEvent('unauthorized')) //window.location.href = "/login"
   }
 }
 /**

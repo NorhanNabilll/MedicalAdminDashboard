@@ -46,7 +46,7 @@ export default function LoginForm() {
     // (ده كود خطوة اللوجن العادية)
     setIsLoading(true)
 
-   /* if (!recaptchaToken) {
+    if (!recaptchaToken) {
       toast({
         title: "الرجاء التحقق",
         description: "يرجى تأكيد أنك لست روبوتًا.",
@@ -54,7 +54,7 @@ export default function LoginForm() {
       })
       setIsLoading(false)
       return
-    }*/
+    }
 
     try {
       // (5ب) استقبال الرد من دالة اللوجن المعدلة
@@ -71,7 +71,8 @@ export default function LoginForm() {
         setStep('verify')                     // تغيير الفورم
       } else {
         // (حالة اللوجن العادي لو حصل - الكود القديم)
-        window.location.href = "/"
+       // للتوجيه للـ home
+        window.dispatchEvent(new CustomEvent('navigateHome'));// window.location.href = "/"
       }
 
     } catch (err) {
@@ -105,7 +106,8 @@ export default function LoginForm() {
         description: "جاري تسجيل دخولك...",
       });
       // تم حفظ التوكنز في دالة verifyMfa، الآن نوجه للداش بورد
-      window.location.href = "/";
+      // للتوجيه للـ home
+    window.dispatchEvent(new CustomEvent('navigateHome'));//window.location.href = "/";
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "فشل التحقق. الكود غير صحيح أو انتهت صلاحيته.";
