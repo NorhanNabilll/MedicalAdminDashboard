@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import * as signalR from '@microsoft/signalr';
-import { getAccessToken, getRefreshToken } from '@/lib/api/tokenService';
 
 interface OrderNotification {
   orderId: number;
@@ -43,50 +42,13 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   useEffect(() => {
-    //  لو جربنا نتصل قبل كده، متجربش تاني
+    // ✅ بدون فحص tokens أو permissions - يبدأ مباشرة
     if (hasAttemptedRef.current) {
       return;
     }
 
-    //  انتظر شوية عشان الـ useTokenRefresh يخلص
-    const initTimer = setTimeout(() => {
-      //  فحص بسيط: في tokens؟
-      const token = getAccessToken();
-      const refreshToken = getRefreshToken();
-      
-      if (!token || !refreshToken) {
-        //console.log(' No tokens - skipping SignalR');
-        hasAttemptedRef.current = true;
-        return;
-      }
-
-      // ✅ فحص الـ permissions
-      const adminData = localStorage.getItem('admin');
-      if (!adminData) {
-        //console.log('ℹ️ No admin data');
-        hasAttemptedRef.current = true;
-        return;
-      }
-
-      try {
-        const admin = JSON.parse(adminData);
-        if (!admin.permissions?.includes('Orders.View')) {
-          //console.log('ℹ️ No Orders.View permission');
-          hasAttemptedRef.current = true;
-          return;
-        }
-      } catch (error) {
-        //console.error('Error parsing admin:', error);
-        hasAttemptedRef.current = true;
-        return;
-      }
-
-      // ✅ كل حاجة تمام - نبدأ الاتصال
-      hasAttemptedRef.current = true;
-      startSignalR();
-    }, 1000); // ✅ انتظار ثانية واحدة
-
-    return () => clearTimeout(initTimer);
+    hasAttemptedRef.current = true;
+    startSignalR();
   }, []);
 
   const startSignalR = () => {
@@ -94,95 +56,81 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({ child
       return;
     }
 
-    //console.log('🔌 Starting SignalR...');
-
+    // ✅ بناء الاتصال بدون token
     const connection = new signalR.HubConnectionBuilder()
       .withUrl(`${process.env.NEXT_PUBLIC_API_HOST}/notificationHub`, {
-        accessTokenFactory: () => getAccessToken() || '',
+        // ✅ شيلنا accessTokenFactory خالص
         transport: signalR.HttpTransportType.WebSockets | 
                    signalR.HttpTransportType.ServerSentEvents | 
                    signalR.HttpTransportType.LongPolling
       })
-      .withAutomaticReconnect([0, 2000, 10000, 30000]) // ✅ 4 محاولات بس
+      .withAutomaticReconnect([0, 2000, 10000, 30000])
       .configureLogging(signalR.LogLevel.Warning)
       .build();
 
     connection.onreconnecting(() => {
-      //console.log('🔄 Reconnecting...');
       setIsConnected(false);
     });
 
     connection.onreconnected(() => {
-      //console.log('✅ Reconnected');
       setIsConnected(true);
     });
 
-    connection.onclose((error) => {
-      //console.log('🔌 Connection closed');
+    connection.onclose(() => {
       setIsConnected(false);
-      
-      // ✅ لو 401، استنى tokenRefreshed
-      if (error?.message?.includes('401')) {
-        //console.log('🔒 Waiting for token refresh...');
-      }
     });
 
     connection.on('ReceiveOrderNotification', (notification: OrderNotification) => {
-      //console.log('🔔 Notification:', notification);
       setLatestNotification(notification);
 
       try {
         new Audio('/notification-sound.mp3').play().catch(() => {});
       } catch (e) {}
 
-    //  if (orderCallbackRef.current) {
-     //   orderCallbackRef.current();
-    //  }
-
-    window.dispatchEvent(new CustomEvent('ordersUpdated', { detail: notification }));
+      window.dispatchEvent(new CustomEvent('ordersUpdated', { detail: notification }));
 
       setTimeout(() => setLatestNotification(null), 5000);
     });
 
     connectionRef.current = connection;
 
-    // ✅ محاولة الاتصال
     connection.start()
       .then(() => {
-        //console.log('✅ SignalR Connected');
         setIsConnected(true);
       })
       .catch((err) => {
-        //console.error('❌ Connection failed:', err.message);
+        console.error('Connection failed:', err.message);
         setIsConnected(false);
       });
   };
-/*
-  // ✅ لما الـ token يتحدث، اعمل reconnect
-  useEffect(() => {
-    const handleTokenRefresh = async () => {
-      //console.log('🔄 Token refreshed');
-      
-      const connection = connectionRef.current;
-      if (!connection) return;
 
-      if (connection.state === signalR.HubConnectionState.Connected) {
-        try {
-          await connection.stop();
-          await new Promise(resolve => setTimeout(resolve, 100));
-          await connection.start();
-          //console.log('✅ Reconnected with new token');
-          setIsConnected(true);
-        } catch (err) {
-          //console.error('❌ Reconnect failed:', err);
+  // ✅ Page Visibility: لما المستخدم يرجع للصفحة، اعمل reconnect
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible') {
+        const connection = connectionRef.current;
+        
+        if (connection && connection.state !== signalR.HubConnectionState.Connected) {
+          try {
+            if (connection.state !== signalR.HubConnectionState.Disconnected) {
+              await connection.stop();
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await connection.start();
+            setIsConnected(true);
+          } catch (err) {
+            console.error('Manual reconnect failed:', err);
+          }
         }
       }
     };
 
-    window.addEventListener('tokenRefreshed', handleTokenRefresh);
-    return () => window.removeEventListener('tokenRefreshed', handleTokenRefresh);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
-*/
+
   // ✅ Cleanup
   useEffect(() => {
     return () => {

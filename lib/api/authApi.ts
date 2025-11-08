@@ -40,9 +40,9 @@ export async function login(email: string, password: string ,recaptchaToken: str
         const decodedToken: { Permission: string[] } = jwtDecode(accessToken);
         const permissions = decodedToken.Permission || [];
         localStorage.setItem('admin', JSON.stringify({ ...admin, permissions }));
-        console.log("Permissions from Token:", permissions);
+       // console.log("Permissions from Token:", permissions);
       } catch (e) {
-        console.error("Error decoding token:", e);
+       // console.error("Error decoding token:", e);
         localStorage.setItem('admin', JSON.stringify({ ...admin, permissions: [] }));
       }
       
