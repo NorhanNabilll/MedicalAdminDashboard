@@ -478,7 +478,7 @@ const getPageNumbers = () => {
                               </span>
                               <h3 id={`order-mobile-${order.id}`} className="font-semibold text-base">{order.orderNumber}</h3>
                             </div>
-                            <p className="text-sm text-muted-foreground mb-2">{order.customerName}</p>
+                            <p className="text-sm text-muted-foreground mb-2">{order.shippingInfo.fullName}</p>
                             <Badge className={getStatusBadgeClassName(order.status)}>
                               {getStatusDisplay(order.status)}
                             </Badge>
@@ -569,7 +569,7 @@ const getPageNumbers = () => {
                           </td>
                           <td className="px-4 py-4 text-sm font-medium">{displayIndex}</td>
                           <td id={`order-${order.id}`} className="px-4 py-4 text-sm font-medium">{order.orderNumber}</td>
-                          <td className="px-4 py-4 text-sm">{order.customerName}</td>
+                          <td className="px-4 py-4 text-sm">{order.shippingInfo.fullName}</td>
                           <td className="px-4 py-4 text-sm text-muted-foreground">
                             {formatDateArabic(order.orderDate)}
                           </td>

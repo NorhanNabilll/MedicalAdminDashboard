@@ -4,7 +4,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { X } from "lucide-react"
+import { X, ZoomIn, Maximize2 } from "lucide-react"
 import { useState, useEffect, useMemo } from "react"
 import {
   type Prescription,
@@ -23,6 +23,7 @@ interface PrescriptionDetailsModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onUpdate?: () => void
+  onImageZoom?: (imageUrl: string) => void
 }
 
 type PrescriptionStatus = "تم الطلب" | "تم الالغاء" | "تم الموافقه" | "تم الرفض"
@@ -39,6 +40,7 @@ export function PrescriptionDetailsModal({
   open,
   onOpenChange,
   onUpdate,
+  onImageZoom,
 }: PrescriptionDetailsModalProps) {
   const { hasPermission } = useAuth()
   const canUpdate = useMemo(() => hasPermission("Prescriptions.Update"), [hasPermission])
@@ -90,7 +92,15 @@ export function PrescriptionDetailsModal({
     }
   }
 
+  const handleImageClick = () => {
+    const imageUrl = getImageUrl(editablePrescription.imageUrl)
+    if (imageUrl && onImageZoom) {
+      onImageZoom(imageUrl)
+    }
+  }
+
   const arabicStatus = mapStatusToArabic(editablePrescription.status) as PrescriptionStatus
+  const imageUrl = getImageUrl(editablePrescription.imageUrl)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -141,14 +151,41 @@ export function PrescriptionDetailsModal({
 
             {/* Prescription Image */}
             <div className="bg-white p-3 rounded-lg shadow-sm">
-              <h3 className="text-sm font-bold text-gray-900 mb-2 text-right">صورة الوصفة</h3>
-              <div className="relative w-full h-64 rounded-md overflow-hidden border bg-muted">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-bold text-gray-900 text-right">صورة الوصفة</h3>
+                {onImageZoom && imageUrl && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleImageClick}
+                    className="h-7 text-xs gap-1"
+                  >
+                    <Maximize2 className="h-3 w-3" />
+                    تكبير الصورة
+                  </Button>
+                )}
+              </div>
+              <div 
+                className="relative w-full h-64 rounded-md overflow-hidden border bg-muted group cursor-pointer"
+                onClick={handleImageClick}
+              >
                 <Image
-                  src={getImageUrl(editablePrescription.imageUrl) || "/placeholder.svg"}
+                  src={imageUrl || "/placeholder.svg"}
                   alt={`وصفة رقم ${editablePrescription.prescriptionNumber}`}
                   fill
-                  className="object-contain"
+                  className="object-contain transition-transform group-hover:scale-105"
                 />
+                {onImageZoom && imageUrl && (
+                  <>
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="bg-black/70 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                        <ZoomIn className="h-4 w-4" />
+                        انقر للتكبير
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 

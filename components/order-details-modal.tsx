@@ -251,7 +251,7 @@ export function OrderDetailsModal({ order, open, onOpenChange, onUpdate }: Order
     }
   }
 
-  const handlePrint = () => {
+const handlePrint = () => {
     if (!editableOrder) return
 
     const printContent = `
@@ -331,7 +331,7 @@ export function OrderDetailsModal({ order, open, onOpenChange, onUpdate }: Order
 
           .patient-info {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
             gap: 4px;
             font-size: 9px;
             text-align: right;
@@ -429,6 +429,10 @@ export function OrderDetailsModal({ order, open, onOpenChange, onUpdate }: Order
               <div class="patient-info-item">
                 <div class="patient-info-label">رقم الهاتف:</div>
                 <div class="patient-info-value" dir="ltr">${editableOrder.shippingInfo.phoneNumber}</div>
+              </div>
+              <div class="patient-info-item">
+                <div class="patient-info-label">كود المريض:</div>
+                <div class="patient-info-value" dir="ltr">${editableOrder.shippingInfo.customerId}</div>
               </div>
               <div class="patient-info-item">
                 <div class="patient-info-label">العنوان:</div>
@@ -574,6 +578,12 @@ export function OrderDetailsModal({ order, open, onOpenChange, onUpdate }: Order
                     <p className="text-xs font-medium text-gray-600 mb-0.5">رقم الهاتف</p>
                     <p className="text-xs font-semibold text-gray-900" dir="ltr">
                       {editableOrder.shippingInfo.phoneNumber}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-medium text-gray-600 mb-0.5">الكود</p>
+                    <p className="text-xs font-semibold text-gray-900" dir="ltr">
+                      {editableOrder.shippingInfo.customerId}
                     </p>
                   </div>
                   <div className="text-right">

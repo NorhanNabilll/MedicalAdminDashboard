@@ -43,7 +43,7 @@ const navItems = [
   { text: "إدارة الطلبات", icon: ShoppingCart, path: "/orders", permission: "Orders.View" },
   { text: "إدارة الوصفات", icon: FileText, path: "/prescriptions", permission: "Prescriptions.View" },
   { text: "الأدوار والصلاحيات", icon: Shield, path: "/roles", superAdminOnly: true },
-  { text: "المديرين", icon: UserCog, path: "/admin-users", superAdminOnly: true },
+  { text: "الإدارة", icon: UserCog, path: "/admin-users", superAdminOnly: true },
   { text: "الإعدادات", icon: Settings, path: "/settings", superAdminOnly: true },
 ]
 

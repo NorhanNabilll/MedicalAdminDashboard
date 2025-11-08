@@ -60,6 +60,7 @@ export type OrderSummary = {
 export type ShippingInfo = {
   fullName: string
   phoneNumber: string
+  customerId: string
   address: string
 }
 

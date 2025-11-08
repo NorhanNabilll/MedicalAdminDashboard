@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, ChevronLeft, ChevronRight, Loader2, FileText } from "lucide-react"
+import { Search, ChevronLeft, ChevronRight, Loader2, FileText, X, ZoomIn } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { withPermission } from "@/components/with-permission"
 import {
@@ -21,6 +21,7 @@ import {
 } from "@/lib/api/prescriptions"
 import { useToast } from "@/hooks/use-toast"
 import { PrescriptionDetailsModal } from "@/components/prescription-details-modal"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 
 type PrescriptionStatus = "تم الطلب" | "تم الالغاء" | "تم الموافقه" | "تم الرفض"
 
@@ -29,6 +30,36 @@ const statusColors: Record<PrescriptionStatus, string> = {
   "تم الالغاء": "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
   "تم الموافقه": "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
   "تم الرفض": "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+}
+
+// Image Zoom Modal Component
+function ImageZoomModal({ imageUrl, open, onOpenChange }: { imageUrl: string | null; open: boolean; onOpenChange: (open: boolean) => void }) {
+  if (!imageUrl) return null
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-hidden">
+        <div className="relative w-full h-full flex items-center justify-center bg-white/95">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-4 left-4 z-10 bg-black/50 hover:bg-black/70 text-white"
+            onClick={() => onOpenChange(false)}
+          >
+            <X className="h-5 w-5" />
+          </Button>
+          <div className="w-full h-full flex items-center justify-center p-4 overflow-auto">
+            <img
+              src={imageUrl}
+              alt="Prescription"
+              className="max-w-full max-h-[90vh] object-contain"
+              style={{ imageRendering: 'high-quality' }}
+            />
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
 }
 
 function PrescriptionsPage() {
@@ -53,6 +84,8 @@ function PrescriptionsPage() {
   const [error, setError] = useState<string | null>(null)
   const [selectedPrescription, setSelectedPrescription] = useState<Prescription | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null)
+  const [isZoomModalOpen, setIsZoomModalOpen] = useState(false)
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -130,15 +163,17 @@ function PrescriptionsPage() {
     loadPrescriptions()
   }
 
-  // --- !!! تم استبدال هذا اللوجيك بالكامل !!! ---
+  const handleImageZoom = (imageUrl: string) => {
+    setZoomedImage(imageUrl)
+    setIsZoomModalOpen(true)
+  }
+
   const getPageNumbers = () => {
     const totalPages = pagination.totalPages
     const currentPage = pagination.currentPage
     const pages: (number | string)[] = []
-    const siblingCount = 1 // عدد الصفحات التي تظهر حول الصفحة الحالية
+    const siblingCount = 1
 
-    // --- 1. هذا هو التعديل الذي طلبته ---
-    // إذا كان عدد الصفحات 4 أو أقل، اعرضهم كلهم
     const totalPagesToShowSimple = 4
     if (totalPages <= totalPagesToShowSimple) {
       for (let i = 1; i <= totalPages; i++) {
@@ -146,38 +181,28 @@ function PrescriptionsPage() {
       }
       return pages
     }
-    // --- نهاية التعديل ---
 
-    // --- 2. "التغييرات اللازمة" (لوجيك ديناميكي) ---
-    // اعرض الصفحة الأولى دائماً
     pages.push(1)
 
-    // 3. احسب نطاق الصفحات (قبل وبعد الصفحة الحالية)
-    // (نضمن أن النطاق لا يتجاوز 2 أو (إجمالي الصفحات - 1))
     const leftSiblingIndex = Math.max(currentPage - siblingCount, 2)
     const rightSiblingIndex = Math.min(currentPage + siblingCount, totalPages - 1)
 
-    // 4. اعرض "..." جهة اليسار إذا لزم الأمر
     if (leftSiblingIndex > 2) {
       pages.push("...")
     }
 
-    // 5. اعرض الأرقام التي في المنتصف
     for (let i = leftSiblingIndex; i <= rightSiblingIndex; i++) {
       pages.push(i)
     }
 
-    // 6. اعرض "..." جهة اليمين إذا لزم الأمر
     if (rightSiblingIndex < totalPages - 1) {
       pages.push("...")
     }
 
-    // 7. اعرض الصفحة الأخيرة دائماً
     pages.push(totalPages)
 
     return pages
   }
-  // --- !!! نهاية الجزء الذي تم استبداله !!! ---
 
   return (
     <DashboardLayout>
@@ -267,7 +292,6 @@ function PrescriptionsPage() {
                       return (
                         <Card key={prescription.id} className="overflow-hidden">
                           <CardContent className="p-4">
-                            {/* Header with number and prescription info */}
                             <div className="mb-3">
                               <div className="flex items-center gap-2 mb-2">
                                 <span className="flex items-center justify-center h-7 w-7 rounded-full bg-primary/10 text-primary text-sm font-semibold">
@@ -280,7 +304,6 @@ function PrescriptionsPage() {
                                   </p>
                                 </div>
                               </div>
-                              {/* Status on separate line */}
                               <div className="flex items-center gap-2">
                                 <Badge variant="outline" className={`${statusColors[arabicStatus]} text-xs`}>
                                   {arabicStatus}
@@ -288,7 +311,6 @@ function PrescriptionsPage() {
                               </div>
                             </div>
 
-                            {/* Patient Information */}
                             <div className="space-y-2 text-sm mb-3">
                               <div className="flex items-start">
                                 <span className="text-muted-foreground min-w-[90px]">اسم المريض:</span>
@@ -367,23 +389,17 @@ function PrescriptionsPage() {
 
                             return (
                               <tr key={prescription.id} className="hover:bg-muted/50 transition-colors">
-                                {/* Index */}
                                 <td className="px-3 py-4 text-sm font-medium">{displayIndex}</td>
-
-                                {/* Prescription Number */}
                                 <td className="px-3 py-4 text-sm font-medium">
                                   <span className="block break-words" title={prescription.prescriptionNumber}>
                                     {prescription.prescriptionNumber}
                                   </span>
                                 </td>
-
                                 <td className="px-3 py-4 text-sm">
                                   <span className="whitespace-nowrap block">
                                     {formatDateArabic(prescription.createdAt)}
                                   </span>
                                 </td>
-
-                                {/* Customer Name */}
                                 <td className="px-3 py-4 text-sm">
                                   <div className="max-w-[140px]">
                                     <span className="break-words block" title={prescription.customerName}>
@@ -391,20 +407,14 @@ function PrescriptionsPage() {
                                     </span>
                                   </div>
                                 </td>
-
-                                {/* Phone Number */}
                                 <td className="px-3 py-4 text-sm text-center w-[120px]">
                                   <span className="font-mono block whitespace-nowrap" dir="ltr">
                                     {prescription.customerPhone}
                                   </span>
                                 </td>
-
-                                {/* Customer Code */}
                                 <td className="px-3 py-4 text-sm">
                                   <span className="font-mono block break-words">{prescription.customerCode}</span>
                                 </td>
-
-                                {/* Status */}
                                 <td className="px-3 py-4 text-sm">
                                   <Badge
                                     variant="outline"
@@ -413,7 +423,6 @@ function PrescriptionsPage() {
                                     {arabicStatus}
                                   </Badge>
                                 </td>
-
                                 <td className="px-3 py-4 text-sm">
                                   <Button variant="default" size="sm" onClick={() => handleViewDetails(prescription)}>
                                     التفاصيل
@@ -484,6 +493,13 @@ function PrescriptionsPage() {
           open={isModalOpen}
           onOpenChange={setIsModalOpen}
           onUpdate={handlePrescriptionUpdate}
+          onImageZoom={handleImageZoom}
+        />
+
+        <ImageZoomModal
+          imageUrl={zoomedImage}
+          open={isZoomModalOpen}
+          onOpenChange={setIsZoomModalOpen}
         />
       </div>
     </DashboardLayout>
