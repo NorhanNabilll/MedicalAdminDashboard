@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react" // ✅ أضف useState
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
 import { Loader2, Users, Package, TrendingUp, Activity, Shield, Pill, ShoppingCart } from "lucide-react"
@@ -9,9 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import useSWR from "swr"
 import { getStatistics } from "@/lib/api/statistics"
 import { OrderStatusEnum } from "@/lib/api/orders"
-import { useSignalR } from '@/context/SignalRContext' // استيراد SignalR
+import { useSignalR } from '@/context/SignalRContext'
 import dynamic from 'next/dynamic'
 import { Skeleton } from "@/components/ui/skeleton"
+
 const OrdersTable = dynamic(() => import('@/components/orders-table'), {
   loading: () => ( 
     <Card>
@@ -19,48 +20,74 @@ const OrdersTable = dynamic(() => import('@/components/orders-table'), {
       <CardContent><Skeleton className="h-48 w-full" /></CardContent>
     </Card>
   ),
-  ssr: false // <-- مهم لو الجدول يستخدم window أو localStorage بكثرة
+  ssr: false
 });
+
 export default function HomePage() {
   const router = useRouter()
   const { admin, isLoading, getDefaultRoute } = useAuth()
-  const { registerOrderCallback } = useSignalR() // استدعاء دالة تسجيل المستمع
+  const { registerOrderCallback } = useSignalR()
+
+  // ✅ State محلي لاسم الأدمن
+  const [adminName, setAdminName] = useState("")
 
   // SWR لجلب الإحصائيات + الحصول على دالة mutate
   const {
     data: statsData,
     isLoading: isLoadingStats,
     error: statsError,
-    mutate: mutateStatistics, // دالة لتحديث هذه البيانات
+    mutate: mutateStatistics,
   } = useSWR("/v1/Admins/statistics", getStatistics, {
     revalidateOnFocus: false,
   })
 
-  /*// ✅ الخطوة 1: تسجيل "مستمع" لتحديث الإحصائيات
+  // ✅ تحميل اسم الأدمن من localStorage
   useEffect(() => {
-    // تسجيل دالة "callback" ليتم استدعاؤها عند وصول إشعار
-    registerOrderCallback(() => {
-      //console.log('New order detected - refreshing statistics...');
-      // عند وصول إشعار، قم بإعادة جلب بيانات الإحصائيات
+    try {
+      const adminDataString = localStorage.getItem('admin');
+      if (adminDataString) {
+        const adminData = JSON.parse(adminDataString);
+        setAdminName(adminData.fullName || "");
+      }
+    } catch (error) {
+      //console.error("Failed to load admin name", error);
+    }
+  }, []);
+
+  // ✅ استمع لتحديثات البروفايل
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      try {
+        const adminDataString = localStorage.getItem('admin');
+        if (adminDataString) {
+          const updatedAdmin = JSON.parse(adminDataString);
+          setAdminName(updatedAdmin.fullName || "");
+        }
+      } catch (error) {
+        //console.error("Failed to update admin name", error);
+      }
+    };
+
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+
+    return () => {
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
+    };
+  }, []);
+
+  // استماع عام لتحديث الإحصائيات عند أي إشعار SignalR
+  useEffect(() => {
+    const handleOrdersUpdated = (e: Event) => {
+      //console.log('📢 ordersUpdated event received - refreshing statistics...');
       mutateStatistics();
-    });
-  }, [mutateStatistics, registerOrderCallback]); // الاعتماديات لضمان عدم تكرار التسجيل*/
-  // ✅ الخطوة 1 (الحل B): استماع عام لتحديث الإحصائيات عند أي إشعار SignalR
-useEffect(() => {
-  const handleOrdersUpdated = (e: Event) => {
-    //console.log('📢 ordersUpdated event received - refreshing statistics...');
-    mutateStatistics(); // يعيد جلب الإحصائيات من الـ API
-  };
+    };
 
-  // التسجيل
-  window.addEventListener('ordersUpdated', handleOrdersUpdated as EventListener);
+    window.addEventListener('ordersUpdated', handleOrdersUpdated as EventListener);
 
-  // التنظيف عند إلغاء المكون
-  return () => {
-    window.removeEventListener('ordersUpdated', handleOrdersUpdated as EventListener);
-  };
-}, [mutateStatistics]);
-
+    return () => {
+      window.removeEventListener('ordersUpdated', handleOrdersUpdated as EventListener);
+    };
+  }, [mutateStatistics]);
 
   // إعادة توجيه المستخدمين غير SuperAdmin
   useEffect(() => {
@@ -90,8 +117,6 @@ useEffect(() => {
     )
   }
 
-  // ✅ الخطوة 2: تعديل مصفوفة الإحصائيات
-  // قمنا بتعديل "value" ليقرأ من "statsData.data" بشكل صحيح
   const stats = [
     {
       title: "إجمالي المرضى",
@@ -128,7 +153,10 @@ useEffect(() => {
       <div className="space-y-6 p-4 md:p-6">
         {/* Page Header */}
         <div className="space-y-2">
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">مرحباً بك، {admin.fullName}</h1>
+          {/* ✅ استخدم adminName بدل admin.fullName */}
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+            مرحباً بك، {adminName || admin.fullName}
+          </h1>
           <p className="text-muted-foreground">نظرة عامة على نشاط النظام الطبي</p>
         </div>
 

@@ -1,7 +1,6 @@
 "use client"
 
 import { AlertDialogFooter } from "@/components/ui/alert-dialog"
-
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { LogOut, User } from "lucide-react"
@@ -29,8 +28,8 @@ export default function ProfileMenu() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const router = useRouter()
 
-  useEffect(() => {
-    // Load admin data from localStorage
+  // ✅ دالة لتحميل البيانات
+  const loadAdminData = () => {
     const adminData = localStorage.getItem("admin")
     if (adminData) {
       try {
@@ -39,6 +38,22 @@ export default function ProfileMenu() {
       } catch (error) {
         //console.error("Failed to parse admin data:", error)
       }
+    }
+  }
+
+  useEffect(() => {
+    // Load admin data from localStorage
+    loadAdminData()
+
+    // ✅ الاستماع لـ custom event
+    const handleStorageChange = () => {
+      loadAdminData()
+    }
+
+    window.addEventListener('profileUpdated', handleStorageChange)
+
+    return () => {
+      window.removeEventListener('profileUpdated', handleStorageChange)
     }
   }, [])
 
@@ -49,7 +64,6 @@ export default function ProfileMenu() {
       router.push("/login")
     } catch (error) {
       //console.error("Logout failed:", error)
-      // Clear tokens and redirect even if logout API fails
       localStorage.removeItem("accessToken")
       localStorage.removeItem("refreshToken")
       localStorage.removeItem("admin")
@@ -63,7 +77,6 @@ export default function ProfileMenu() {
     return null
   }
 
-  // Get initials from name
   const initials = (admin.fullName || "")
     .split(" ")
     .map((n) => n[0])
@@ -89,7 +102,6 @@ export default function ProfileMenu() {
           <User className="h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5" />
         </Button>
 
-        {/* Avatar */}
         <Avatar className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 flex-shrink-0">
           <AvatarImage src="/abstract-profile.png" alt={admin.fullName} />
           <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-xs sm:text-sm">
@@ -97,7 +109,6 @@ export default function ProfileMenu() {
           </AvatarFallback>
         </Avatar>
 
-        {/* Logout Button */}
         <Button
           variant="ghost"
           size="icon"

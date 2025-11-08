@@ -54,14 +54,46 @@ export default function ProfilePage() {
   const [passwordStrength, setPasswordStrength] = useState(0)
 
   // Initialize profile data
-  useEffect(() => {
-    if (admin) {
+// Initialize profile data
+useEffect(() => {
+  // ✅ اقرأ من localStorage مباشرة بدل admin
+  try {
+    const adminDataString = localStorage.getItem('admin');
+    if (adminDataString) {
+      const adminData = JSON.parse(adminDataString);
       setProfileData({
-        fullName: admin.fullName || "",
-        email: admin.email || "",
-      })
+        fullName: adminData.fullName || "",
+        email: adminData.email || "",
+      });
     }
-  }, [admin])
+  } catch (error) {
+    //console.error("Failed to load profile data", error);
+  }
+}, []); // ✅ شيل admin من الـ dependencies
+
+  // ✅ استمع لتحديثات البروفايل
+useEffect(() => {
+  const handleProfileUpdate = () => {
+    try {
+      const adminDataString = localStorage.getItem('admin');
+      if (adminDataString) {
+        const updatedAdmin = JSON.parse(adminDataString);
+        setProfileData({
+          fullName: updatedAdmin.fullName || "",
+          email: updatedAdmin.email || "",
+        });
+      }
+    } catch (error) {
+      //console.error("Failed to update profile data", error);
+    }
+  };
+
+  window.addEventListener('profileUpdated', handleProfileUpdate);
+
+  return () => {
+    window.removeEventListener('profileUpdated', handleProfileUpdate);
+  };
+}, []);
 
   // Calculate password strength
   useEffect(() => {
@@ -126,6 +158,8 @@ export default function ProfilePage() {
           const updatedAdmin = { ...admin, ...profileData };
           localStorage.setItem("admin", JSON.stringify(updatedAdmin));
 
+         // window.dispatchEvent(new Event('adminDataUpdated'));
+
           // 2. Now, check if the email was changed
           if (oldEmail && oldEmail.toLowerCase() !== profileData.email.toLowerCase()) {
               // --- Email Changed Case ---
@@ -145,6 +179,9 @@ export default function ProfilePage() {
                   description: "تم تحديث بيانات الملف الشخصي بنجاح",
               });
               setProfileChanged(false);
+
+              // ✅ إطلاق event لتحديث ProfileMenu
+               window.dispatchEvent(new Event('profileUpdated'));
           }
       }
         
