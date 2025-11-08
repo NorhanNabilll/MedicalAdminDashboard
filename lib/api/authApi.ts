@@ -25,63 +25,36 @@ export interface MfaRequiredResponse {
 /**
  * دالة تسجيل الدخول.
  */
-export async function login(email: string, password: string, recaptchaToken: string) {
+export async function login(email: string, password: string ,recaptchaToken: string)  {
   try {
-    // (4) عدّلنا النوع المتوقع هنا لـ MfaRequiredResponse
-    const response = await apiClient.post<{ success: boolean; message: string; data: MfaRequiredResponse }>(
+    const response = await apiClient.post<{ success: boolean; message: string; data: LoginResponseData }>(
         "/v1/AdminAuth/login", 
         { email, password, recaptchaToken }
     );
     
-    if (response.data.success && response.data.data.requiresMFA) {
-      // (5) مبقناش بنسجل توكنز هنا
-      // (كل اللي بنعمله إننا بنرجع الداتا للـ UI عشان يعرض فورم الكود)
-      return { 
-        success: true, 
-        requiresMFA: true, 
-        data: response.data.data // (هنا الـ tempToken والإيميل)
-      };
+    if (response.data.success) {
+      const { accessToken, refreshToken, admin } = response.data.data;
+      saveTokens(accessToken, refreshToken);
+
+      try {
+        const decodedToken: { Permission: string[] } = jwtDecode(accessToken);
+        const permissions = decodedToken.Permission || [];
+        localStorage.setItem('admin', JSON.stringify({ ...admin, permissions }));
+        console.log("Permissions from Token:", permissions);
+      } catch (e) {
+        console.error("Error decoding token:", e);
+        localStorage.setItem('admin', JSON.stringify({ ...admin, permissions: [] }));
+      }
+      
+      return { success: true, data: admin };
     } else {
-      // لو الرد نجح بس مرجعش (requiresMFA)، يبقى فيه حاجة غلط
-      throw new Error(response.data.message || 'Login response was not in the expected format.');
+      throw new Error(response.data.message || 'فشل تسجيل الدخول');
     }
   } catch (error) {
     throw error;
   }
 };
 
-export async function verifyMfa(tempToken: string, code: string) {
-  try {
-    // (بنكلم الـ Endpoint الجديد بتاع التحقق)
-    const response = await apiClient.post<{ success: boolean; message: string; data: LoginResponseData }>(
-      "/v1/AdminAuth/verify-mfa",
-      { tempToken, code }
-    );
-
-    if (response.data.success) {
-      // (7) هنا بقى بيحصل اللوجن الحقيقي
-      // (ده الكود اللي "كان" جوه دالة اللوجن القديمة)
-      const { accessToken, refreshToken, admin } = response.data.data;
-      
-      saveTokens(accessToken, refreshToken); // <-- حفظ التوكنز
-      try {
-        const decodedToken: { Permission: string[] } = jwtDecode(accessToken);
-        const permissions = decodedToken.Permission || [];
-        localStorage.setItem('admin', JSON.stringify({ ...admin, permissions })); // <-- حفظ بيانات الأدمن
-      } catch (e) {
-        //console.error("Error decoding token:", e);
-        localStorage.setItem('admin', JSON.stringify({ ...admin, permissions: [] }));
-      }
-      
-      return { success: true, data: admin };
-    } else {
-      throw new Error(response.data.message || 'فشل التحقق من الكود');
-    }
-
-  } catch (error) {
-    throw error;
-  }
-}
 
 /**
  * Logs the user out by revoking the refresh token on the server
